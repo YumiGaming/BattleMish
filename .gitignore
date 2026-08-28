@@ -33,6 +33,8 @@ ENV/
 *.swp
 *.swo
 
-# OS files
-.DS_Store
-Thumbs.db
+# Database
+*.db
+*.sqlite3
+battlemish.db
+
