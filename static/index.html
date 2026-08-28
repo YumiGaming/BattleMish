@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BattleMish — Batalla Naval Multijugador en Red</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="bg-radar-grid"></div>
+    <div class="bg-glow"></div>
+
+    <!-- Barra de Navegación -->
+    <header class="navbar glass-panel">
+        <div class="nav-brand">
+            <div class="radar-icon">
+                <div class="radar-sweep"></div>
+                <div class="radar-dot"></div>
+            </div>
+            <div class="brand-text">
+                <span class="brand-title">BATTLE<span class="accent-cyan">MISH</span></span>
+                <span class="brand-tag">NAVAL WARFARE // TCP/WS</span>
+            </div>
+        </div>
+
+        <div class="nav-actions">
+            <!-- Usuario Autenticado -->
+            <div id="user-badge" class="user-badge hidden">
+                <div class="user-avatar" id="nav-avatar">⚓</div>
+                <div class="user-info-pill">
+                    <span id="nav-username" class="user-name">Almirante</span>
+                    <span id="nav-stats" class="user-stats">0V - 0D (0%)</span>
+                </div>
+                <button id="btn-open-history" class="btn btn-secondary btn-sm" title="Ver Historial">📜 Historial</button>
+                <button id="btn-logout" class="btn btn-ghost btn-sm" title="Cerrar Sesión">🚪</button>
+            </div>
+
+            <!-- Botón Login para no autenticados -->
+            <div id="auth-buttons">
+                <button id="btn-open-login" class="btn btn-primary btn-sm">Iniciar Sesión / Registro</button>
+            </div>
+
+            <button id="btn-toggle-sound" class="btn btn-icon" title="Silenciar / Activar Sonido">🔊</button>
+        </div>
+    </header>
+
+    <main class="main-container">
+        
+        <!-- SECCIÓN 1: LOBBY & SALAS -->
+        <section id="view-lobby" class="view-section active">
+            <div class="hero-header">
+                <h1 class="hero-title">BATALLA NAVAL <span class="glow-text">EN TIEMPO REAL</span></h1>
+                <p class="hero-subtitle">Crea una sala con ID compartible o únete para desafiar a otros almirantes en combate táctico por turnos.</p>
+            </div>
+
+            <div class="lobby-grid">
+                <!-- Tarjeta: Crear Sala -->
+                <div class="card glass-panel create-card">
+                    <div class="card-icon">🚀</div>
+                    <h2>Crear Sala de Combate</h2>
+                    <p>Genera una sala con un código identificador único (ID) para invitar a un amigo con un enlace.</p>
+                    
+                    <div class="form-group">
+                        <label for="input-room-name">Nombre de la Sala (Opcional):</label>
+                        <input type="text" id="input-room-name" class="input-field" placeholder="Ej: Operación Tridente" maxlength="30">
+                    </div>
+                    
+                    <button id="btn-create-room" class="btn btn-primary btn-lg btn-block">
+                        ⚡ Crear Sala & Obtener ID
+                    </button>
+                </div>
+
+                <!-- Tarjeta: Unirse por ID -->
+                <div class="card glass-panel join-card">
+                    <div class="card-icon">🎯</div>
+                    <h2>Unirse por Código / ID</h2>
+                    <p>Ingresa el código de sala proporcionado por tu oponente para ingresar a la batalla.</p>
+                    
+                    <div class="form-group">
+                        <label for="input-room-id">Código de Sala (ID):</label>
+                        <div class="input-with-button">
+                            <input type="text" id="input-room-id" class="input-field uppercase font-mono" placeholder="Ej: WAR-7429" maxlength="15">
+                            <button id="btn-join-room" class="btn btn-accent">Unirse</button>
+                        </div>
+                    </div>
+
+                    <div class="quick-join-divider"><span>O ÚNETE A UNA SALA PÚBLICA</span></div>
+                    
+                    <div class="public-rooms-container">
+                        <div class="rooms-header">
+                            <span>Salas en espera</span>
+                            <button id="btn-refresh-rooms" class="btn btn-ghost btn-xs">🔄 Actualizar</button>
+                        </div>
+                        <div id="rooms-list" class="rooms-list">
+                            <div class="empty-state">Buscando salas abiertas...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: ESPERA DE OPONENTE (LOBBY SALA) -->
+        <section id="view-waiting" class="view-section hidden">
+            <div class="waiting-card glass-panel">
+                <div class="sonar-container">
+                    <div class="sonar-wave wave-1"></div>
+                    <div class="sonar-wave wave-2"></div>
+                    <div class="sonar-wave wave-3"></div>
+                    <div class="sonar-core">📡</div>
+                </div>
+
+                <h2 class="waiting-title">SALA DE COMBATE: <span id="display-room-code" class="accent-cyan font-mono">WAR-XXXX</span></h2>
+                <p class="waiting-desc">Comparte este código o enlace con tu rival para iniciar el enfrentamiento.</p>
+
+                <div class="share-box glass-panel">
+                    <input type="text" id="share-link-input" class="input-field font-mono" readonly>
+                    <button id="btn-copy-link" class="btn btn-primary">📋 Copiar Link</button>
+                </div>
+
+                <div class="players-status-box">
+                    <div class="player-slot slot-p1 active">
+                        <div class="slot-avatar">👑</div>
+                        <span id="slot-p1-name" class="slot-name">Tú (Anfitrión)</span>
+                        <span class="slot-badge badge-ready">Conectado</span>
+                    </div>
+                    <div class="vs-badge">VS</div>
+                    <div class="player-slot slot-p2">
+                        <div class="slot-avatar" id="slot-p2-avatar">⏳</div>
+                        <span id="slot-p2-name" class="slot-name">Esperando Rival...</span>
+                        <span id="slot-p2-badge" class="slot-badge badge-waiting">Buscando...</span>
+                    </div>
+                </div>
+
+                <button id="btn-leave-room" class="btn btn-ghost btn-sm mt-4">Cancelar y Volver al Lobby</button>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 3: COLOCACIÓN DE BARCOS -->
+        <section id="view-placement" class="view-section hidden">
+            <div class="placement-layout">
+                
+                <!-- Panel de Control de la Flota -->
+                <div class="fleet-dock glass-panel">
+                    <h2>DESPLIEGUE NAVAL</h2>
+                    <p class="dock-desc">Coloca tus 5 barcos en la cuadrícula táctica. Haz clic para posicionar o usa rotación.</p>
+
+                    <div class="fleet-selector" id="fleet-selector">
+                        <!-- Barcos inyectados dinámicamente -->
+                    </div>
+
+                    <div class="placement-actions">
+                        <button id="btn-rotate-ship" class="btn btn-secondary btn-block">
+                            🔄 Rotar Barco (<span id="rotate-label">Horizontal</span>) [R]
+                        </button>
+                        <button id="btn-auto-place" class="btn btn-accent btn-block">
+                            🎲 Despliegue Aleatorio
+                        </button>
+                        <button id="btn-reset-placement" class="btn btn-ghost btn-block">
+                            🧹 Limpiar Tablero
+                        </button>
+                        <button id="btn-confirm-fleet" class="btn btn-primary btn-lg btn-block mt-3" disabled>
+                            ⚔️ Confirmar & Listo
+                        </button>
+                    </div>
+
+                    <div id="opponent-placement-status" class="status-indicator waiting">
+                        <span class="pulse-dot"></span>
+                        <span id="opp-place-text">Oponente posicionando su flota...</span>
+                    </div>
+                </div>
+
+                <!-- Tablero de Posicionamiento -->
+                <div class="board-wrapper glass-panel">
+                    <div class="board-header">
+                        <h3>CUADRÍCULA TÁCTICA PROPIA (10x10)</h3>
+                        <span class="board-hint">Haz clic en una casilla para colocar el barco seleccionado</span>
+                    </div>
+                    <div class="grid-container" id="placement-grid"></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECCIÓN 4: ARENA DE BATALLA -->
+        <section id="view-battle" class="view-section hidden">
+            
+            <!-- Barra Superior de Estado de Combate -->
+            <div class="battle-hud glass-panel">
+                <div class="hud-player hud-self">
+                    <div class="hud-avatar">🛡️</div>
+                    <div class="hud-details">
+                        <span id="hud-my-name" class="hud-name">Almirante</span>
+                        <div class="hud-fleet-hp" id="hud-my-hp">
+                            <!-- Iconos de barcos propios -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hud-center">
+                    <div id="turn-banner" class="turn-banner your-turn">
+                        <span class="turn-pulse"></span>
+                        <span id="turn-text">¡ES TU TURNO DE FUEGO!</span>
+                    </div>
+                    <div class="turn-counter">Turno <span id="turn-number">1</span> // Sala <span id="battle-room-id" class="font-mono">WAR-XXXX</span></div>
+                </div>
+
+                <div class="hud-player hud-opp">
+                    <div class="hud-details align-right">
+                        <span id="hud-opp-name" class="hud-name">Oponente</span>
+                        <div class="hud-fleet-hp" id="hud-opp-hp">
+                            <!-- Iconos de barcos enemigos -->
+                        </div>
+                    </div>
+                    <div class="hud-avatar">⚔️</div>
+                </div>
+            </div>
+
+            <!-- Tableros de Combate Dobles -->
+            <div class="battle-arenas">
+                
+                <!-- Tablero 1: Radar Enemigo (Atacar aquí) -->
+                <div class="arena-board glass-panel radar-panel">
+                    <div class="arena-header">
+                        <h3>📡 RADAR ENEMIGO // ZONA DE ATAQUE</h3>
+                        <span class="badge-attack">Haz clic en una coordenada para disparar</span>
+                    </div>
+                    <div class="grid-container" id="radar-grid"></div>
+                </div>
+
+                <!-- Tablero 2: Flota Propia (Ver estado y daños) -->
+                <div class="arena-board glass-panel fleet-panel">
+                    <div class="arena-header">
+                        <h3>🛡️ TU FLOTA // ESTADO DE DEFENSA</h3>
+                        <span class="badge-defense">Monitorea los impactos enemigos</span>
+                    </div>
+                    <div class="grid-container" id="own-battle-grid"></div>
+                </div>
+
+            </div>
+
+            <!-- Log de Combate y Chat Rápido -->
+            <div class="combat-ticker glass-panel">
+                <div class="ticker-title">📡 TELEMETRÍA NAVAL:</div>
+                <div id="combat-log" class="ticker-messages">
+                    <div class="log-entry log-system">Sistemas en línea. ¡Que comience el combate!</div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- MODAL DE LOGIN / REGISTRO -->
+    <div id="modal-auth" class="modal-backdrop hidden">
+        <div class="modal-card glass-panel">
+            <button class="modal-close" id="btn-close-auth">✕</button>
+            
+            <div class="modal-tabs">
+                <button class="tab-btn active" id="tab-login">Iniciar Sesión</button>
+                <button class="tab-btn" id="tab-register">Crear Cuenta</button>
+            </div>
+
+            <!-- Formulario Login -->
+            <form id="form-login" class="auth-form">
+                <div class="form-group">
+                    <label for="login-username">Almirante / Usuario:</label>
+                    <input type="text" id="login-username" class="input-field" required placeholder="Tu nombre de usuario">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Contraseña de Mando:</label>
+                    <input type="password" id="login-password" class="input-field" required placeholder="••••••••">
+                </div>
+                <div id="login-error" class="auth-error hidden"></div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg mt-3">Ingresar al Puente de Mando</button>
+            </form>
+
+            <!-- Formulario Registro -->
+            <form id="form-register" class="auth-form hidden">
+                <div class="form-group">
+                    <label for="reg-username">Nombre de Almirante:</label>
+                    <input type="text" id="reg-username" class="input-field" required placeholder="Entre 3 y 20 caracteres" minlength="3" maxlength="20">
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Contraseña Segura:</label>
+                    <input type="password" id="reg-password" class="input-field" required placeholder="Mínimo 4 caracteres" minlength="4">
+                </div>
+                <div id="reg-error" class="auth-error hidden"></div>
+                <button type="submit" class="btn btn-accent btn-block btn-lg mt-3">Registrar Cuenta & Guardar Récords</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- DRAWER / MODAL DE HISTORIAL & PERFIL -->
+    <div id="modal-history" class="modal-backdrop hidden">
+        <div class="modal-card glass-panel history-modal-card">
+            <button class="modal-close" id="btn-close-history">✕</button>
+            
+            <div class="profile-summary">
+                <div class="profile-avatar">⚓</div>
+                <div class="profile-info">
+                    <h2 id="profile-name">Almirante</h2>
+                    <p class="profile-joined">Historial de Servicio Naval</p>
+                </div>
+            </div>
+
+            <!-- Tarjetas de Estadísticas -->
+            <div class="stats-grid">
+                <div class="stat-card glass-panel">
+                    <span class="stat-num" id="stat-total">0</span>
+                    <span class="stat-label">Partidas</span>
+                </div>
+                <div class="stat-card glass-panel stat-win">
+                    <span class="stat-num" id="stat-wins">0</span>
+                    <span class="stat-label">Victorias</span>
+                </div>
+                <div class="stat-card glass-panel stat-loss">
+                    <span class="stat-num" id="stat-losses">0</span>
+                    <span class="stat-label">Derrotas</span>
+                </div>
+                <div class="stat-card glass-panel stat-rate">
+                    <span class="stat-num" id="stat-rate">0%</span>
+                    <span class="stat-label">Win Rate</span>
+                </div>
+            </div>
+
+            <!-- Lista de Historial -->
+            <h3 class="history-title">Registro de Batallas Recientes</h3>
+            <div class="history-list" id="history-container">
+                <div class="empty-state">No hay partidas registradas aún.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE FIN DE JUEGO (VICTORIA / DERROTA) -->
+    <div id="modal-gameover" class="modal-backdrop hidden">
+        <div class="modal-card glass-panel gameover-card" id="gameover-card">
+            <div class="gameover-icon" id="gameover-icon">🏆</div>
+            <h2 class="gameover-title" id="gameover-title">¡VICTORIA NAVAL!</h2>
+            <p class="gameover-reason" id="gameover-reason">Has hundido toda la flota enemiga.</p>
+
+            <div class="gameover-stats glass-panel">
+                <div class="g-stat">
+                    <span class="g-num" id="go-turns">0</span>
+                    <span class="g-lbl">Turnos Totales</span>
+                </div>
+                <div class="g-stat">
+                    <span class="g-num" id="go-duration">0s</span>
+                    <span class="g-lbl">Duración</span>
+                </div>
+            </div>
+
+            <div class="gameover-actions">
+                <button id="btn-gameover-lobby" class="btn btn-primary btn-lg btn-block">Volver al Lobby</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="/js/audio.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
