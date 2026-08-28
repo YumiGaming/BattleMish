@@ -3,47 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BattleMish — Batalla Naval Multijugador en Red</title>
+    <title>BattleMish — Batalla Naval en Hoja de Cuaderno</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@600;700&family=Patrick+Hand&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <div class="bg-radar-grid"></div>
-    <div class="bg-glow"></div>
+    <!-- Fondo de Cuaderno Cuadriculado con margen rojo -->
+    <div class="notebook-bg">
+        <div class="notebook-margin-line"></div>
+    </div>
 
-    <!-- Barra de Navegación -->
-    <header class="navbar glass-panel">
+    <!-- Barra de Navegación Estilo Papel Cinta -->
+    <header class="navbar paper-tape">
         <div class="nav-brand">
-            <div class="radar-icon">
-                <div class="radar-sweep"></div>
-                <div class="radar-dot"></div>
+            <div class="drawn-icon compass-icon">
+                <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                </svg>
             </div>
             <div class="brand-text">
-                <span class="brand-title">BATTLE<span class="accent-cyan">MISH</span></span>
-                <span class="brand-tag">NAVAL WARFARE // TCP/WS</span>
+                <span class="brand-title">BATTLE<span class="ink-red">MISH</span></span>
+                <span class="brand-tag">BATALLA NAVAL DE CUADERNO // MULTIJUGADOR</span>
             </div>
         </div>
 
         <div class="nav-actions">
             <!-- Usuario Autenticado -->
             <div id="user-badge" class="user-badge hidden">
-                <div class="user-avatar" id="nav-avatar">⚓</div>
+                <div class="user-avatar-tag">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
                 <div class="user-info-pill">
-                    <span id="nav-username" class="user-name">Almirante</span>
+                    <span id="nav-username" class="user-name">Capitán</span>
                     <span id="nav-stats" class="user-stats">0V - 0D (0%)</span>
                 </div>
-                <button id="btn-open-history" class="btn btn-secondary btn-sm" title="Ver Historial">📜 Historial</button>
-                <button id="btn-logout" class="btn btn-ghost btn-sm" title="Cerrar Sesión">🚪</button>
+                <button id="btn-open-history" class="btn btn-paper btn-sm" title="Ver Historial">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    Historial
+                </button>
+                <button id="btn-logout" class="btn btn-stamp btn-sm" title="Cerrar Sesión">Salir</button>
             </div>
 
             <!-- Botón Login para no autenticados -->
             <div id="auth-buttons">
-                <button id="btn-open-login" class="btn btn-primary btn-sm">Iniciar Sesión / Registro</button>
+                <button id="btn-open-login" class="btn btn-ink btn-sm">Iniciar Sesión / Registro</button>
             </div>
 
-            <button id="btn-toggle-sound" class="btn btn-icon" title="Silenciar / Activar Sonido">🔊</button>
+            <button id="btn-toggle-sound" class="btn btn-icon btn-paper" title="Silenciar / Activar Sonido">
+                <svg id="icon-sound-on" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+            </button>
         </div>
     </header>
 
@@ -52,38 +74,65 @@
         <!-- SECCIÓN 1: LOBBY & SALAS -->
         <section id="view-lobby" class="view-section active">
             <div class="hero-header">
-                <h1 class="hero-title">BATALLA NAVAL <span class="glow-text">EN TIEMPO REAL</span></h1>
-                <p class="hero-subtitle">Crea una sala con ID compartible o únete para desafiar a otros almirantes en combate táctico por turnos.</p>
+                <div class="doodle-ship-banner">
+                    <svg viewBox="0 0 120 40" width="120" height="40" stroke="#1e3a8a" stroke-width="2" fill="none">
+                        <path d="M10 28 L110 28 L95 38 L25 38 Z" stroke-linejoin="round"></path>
+                        <path d="M35 28 L35 12 L55 12 L55 28" fill="#dbeafe"></path>
+                        <path d="M60 28 L60 8 L80 8 L80 28" fill="#dbeafe"></path>
+                        <line x1="45" y1="6" x2="45" y2="12"></line>
+                        <line x1="70" y1="2" x2="70" y2="8"></line>
+                    </svg>
+                </div>
+                <h1 class="hero-title">BATALLA NAVAL <span class="ink-red-underline">EN TU CUADERNO</span></h1>
+                <p class="hero-subtitle">El clásico juego de lápiz y papel ahora en tu navegador. Crea una sala con código para jugar con un amigo o únete a una partida.</p>
             </div>
 
             <div class="lobby-grid">
                 <!-- Tarjeta: Crear Sala -->
-                <div class="card glass-panel create-card">
-                    <div class="card-icon">🚀</div>
-                    <h2>Crear Sala de Combate</h2>
-                    <p>Genera una sala con un código identificador único (ID) para invitar a un amigo con un enlace.</p>
+                <div class="paper-sheet create-card">
+                    <div class="pin-header">
+                        <div class="sheet-pin"></div>
+                    </div>
+                    <div class="card-title-row">
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="#1e3a8a" stroke-width="2" fill="none">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                        <h2>Crear Hoja de Partida</h2>
+                    </div>
+                    <p>Genera una sala con un código identificador (ID) para invitar a tu rival mediante un enlace.</p>
                     
                     <div class="form-group">
-                        <label for="input-room-name">Nombre de la Sala (Opcional):</label>
-                        <input type="text" id="input-room-name" class="input-field" placeholder="Ej: Operación Tridente" maxlength="30">
+                        <label for="input-room-name">Título de la Partida (Opcional):</label>
+                        <input type="text" id="input-room-name" class="notebook-input" placeholder="Ej: Duelo en clase de Redes" maxlength="30">
                     </div>
                     
-                    <button id="btn-create-room" class="btn btn-primary btn-lg btn-block">
-                        ⚡ Crear Sala & Obtener ID
+                    <button id="btn-create-room" class="btn btn-ink btn-lg btn-block">
+                        Crear Sala & Obtener Código
                     </button>
                 </div>
 
                 <!-- Tarjeta: Unirse por ID -->
-                <div class="card glass-panel join-card">
-                    <div class="card-icon">🎯</div>
-                    <h2>Unirse por Código / ID</h2>
-                    <p>Ingresa el código de sala proporcionado por tu oponente para ingresar a la batalla.</p>
+                <div class="paper-sheet join-card">
+                    <div class="pin-header">
+                        <div class="sheet-pin"></div>
+                    </div>
+                    <div class="card-title-row">
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="#dc2626" stroke-width="2" fill="none">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="12" r="6"></circle>
+                            <circle cx="12" cy="12" r="2"></circle>
+                        </svg>
+                        <h2>Unirse con Código / ID</h2>
+                    </div>
+                    <p>Ingresa el código que te compartió tu amigo para entrar directo a su cuadrícula.</p>
                     
                     <div class="form-group">
                         <label for="input-room-id">Código de Sala (ID):</label>
                         <div class="input-with-button">
-                            <input type="text" id="input-room-id" class="input-field uppercase font-mono" placeholder="Ej: WAR-7429" maxlength="15">
-                            <button id="btn-join-room" class="btn btn-accent">Unirse</button>
+                            <input type="text" id="input-room-id" class="notebook-input uppercase font-mono" placeholder="Ej: WAR-7429" maxlength="15">
+                            <button id="btn-join-room" class="btn btn-stamp">Entrar</button>
                         </div>
                     </div>
 
@@ -91,92 +140,94 @@
                     
                     <div class="public-rooms-container">
                         <div class="rooms-header">
-                            <span>Salas en espera</span>
-                            <button id="btn-refresh-rooms" class="btn btn-ghost btn-xs">🔄 Actualizar</button>
+                            <span>Hojas esperando rival</span>
+                            <button id="btn-refresh-rooms" class="btn btn-link btn-xs">Actualizar</button>
                         </div>
                         <div id="rooms-list" class="rooms-list">
-                            <div class="empty-state">Buscando salas abiertas...</div>
+                            <div class="empty-state">Buscando hojas de juego abiertas...</div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- SECCIÓN 2: ESPERA DE OPONENTE (LOBBY SALA) -->
+        <!-- SECCIÓN 2: ESPERA DE OPONENTE (SALA) -->
         <section id="view-waiting" class="view-section hidden">
-            <div class="waiting-card glass-panel">
-                <div class="sonar-container">
-                    <div class="sonar-wave wave-1"></div>
-                    <div class="sonar-wave wave-2"></div>
-                    <div class="sonar-wave wave-3"></div>
-                    <div class="sonar-core">📡</div>
+            <div class="paper-sheet waiting-card">
+                <div class="sheet-pin"></div>
+                <div class="doodle-clock">
+                    <svg viewBox="0 0 24 24" width="48" height="48" stroke="#1e3a8a" stroke-width="2" fill="none">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
                 </div>
 
-                <h2 class="waiting-title">SALA DE COMBATE: <span id="display-room-code" class="accent-cyan font-mono">WAR-XXXX</span></h2>
-                <p class="waiting-desc">Comparte este código o enlace con tu rival para iniciar el enfrentamiento.</p>
+                <h2 class="waiting-title">HOJA DE COMBATE: <span id="display-room-code" class="ink-red font-mono">WAR-XXXX</span></h2>
+                <p class="waiting-desc">Comparte este enlace o código con tu amigo para que abra su cuaderno y comience el juego.</p>
 
-                <div class="share-box glass-panel">
-                    <input type="text" id="share-link-input" class="input-field font-mono" readonly>
-                    <button id="btn-copy-link" class="btn btn-primary">📋 Copiar Link</button>
+                <div class="share-box">
+                    <input type="text" id="share-link-input" class="notebook-input font-mono" readonly>
+                    <button id="btn-copy-link" class="btn btn-ink">Copiar Link</button>
                 </div>
 
                 <div class="players-status-box">
                     <div class="player-slot slot-p1 active">
-                        <div class="slot-avatar">👑</div>
-                        <span id="slot-p1-name" class="slot-name">Tú (Anfitrión)</span>
-                        <span class="slot-badge badge-ready">Conectado</span>
+                        <div class="slot-avatar-tag">1</div>
+                        <span id="slot-p1-name" class="slot-name">Tú (Creador)</span>
+                        <span class="slot-badge badge-ready">Listo en la mesa</span>
                     </div>
-                    <div class="vs-badge">VS</div>
+                    <div class="vs-divider">VS</div>
                     <div class="player-slot slot-p2">
-                        <div class="slot-avatar" id="slot-p2-avatar">⏳</div>
+                        <div class="slot-avatar-tag" id="slot-p2-avatar">?</div>
                         <span id="slot-p2-name" class="slot-name">Esperando Rival...</span>
-                        <span id="slot-p2-badge" class="slot-badge badge-waiting">Buscando...</span>
+                        <span id="slot-p2-badge" class="slot-badge badge-waiting">Buscando lápiz...</span>
                     </div>
                 </div>
 
-                <button id="btn-leave-room" class="btn btn-ghost btn-sm mt-4">Cancelar y Volver al Lobby</button>
+                <button id="btn-leave-room" class="btn btn-paper btn-sm mt-4">Volver al Lobby</button>
             </div>
         </section>
 
-        <!-- SECCIÓN 3: COLOCACIÓN DE BARCOS -->
+        <!-- SECCIÓN 3: DIBUJAR / COLOCAR BARCOS -->
         <section id="view-placement" class="view-section hidden">
             <div class="placement-layout">
                 
                 <!-- Panel de Control de la Flota -->
-                <div class="fleet-dock glass-panel">
-                    <h2>DESPLIEGUE NAVAL</h2>
-                    <p class="dock-desc">Coloca tus 5 barcos en la cuadrícula táctica. Haz clic para posicionar o usa rotación.</p>
+                <div class="paper-sheet fleet-dock">
+                    <div class="sheet-pin"></div>
+                    <h2>DIBUJA TU FLOTA</h2>
+                    <p class="dock-desc">Coloca tus 5 barcos en la cuadrícula de tu cuaderno. Haz clic en una casilla o usa rotación.</p>
 
                     <div class="fleet-selector" id="fleet-selector">
                         <!-- Barcos inyectados dinámicamente -->
                     </div>
 
                     <div class="placement-actions">
-                        <button id="btn-rotate-ship" class="btn btn-secondary btn-block">
-                            🔄 Rotar Barco (<span id="rotate-label">Horizontal</span>) [R]
+                        <button id="btn-rotate-ship" class="btn btn-paper btn-block">
+                            Rotar Barco (<span id="rotate-label">Horizontal</span>) [Tecla R]
                         </button>
-                        <button id="btn-auto-place" class="btn btn-accent btn-block">
-                            🎲 Despliegue Aleatorio
+                        <button id="btn-auto-place" class="btn btn-stamp btn-block">
+                            Posicionar al Azar
                         </button>
-                        <button id="btn-reset-placement" class="btn btn-ghost btn-block">
-                            🧹 Limpiar Tablero
+                        <button id="btn-reset-placement" class="btn btn-link btn-block">
+                            Borrar con Goma
                         </button>
-                        <button id="btn-confirm-fleet" class="btn btn-primary btn-lg btn-block mt-3" disabled>
-                            ⚔️ Confirmar & Listo
+                        <button id="btn-confirm-fleet" class="btn btn-ink btn-lg btn-block mt-3" disabled>
+                            Confirmar Cuadrícula
                         </button>
                     </div>
 
                     <div id="opponent-placement-status" class="status-indicator waiting">
-                        <span class="pulse-dot"></span>
-                        <span id="opp-place-text">Oponente posicionando su flota...</span>
+                        <span id="opp-place-text">El rival está dibujando sus barcos...</span>
                     </div>
                 </div>
 
-                <!-- Tablero de Posicionamiento -->
-                <div class="board-wrapper glass-panel">
+                <!-- Tablero de Cuaderno -->
+                <div class="paper-sheet board-wrapper">
+                    <div class="sheet-pin"></div>
                     <div class="board-header">
-                        <h3>CUADRÍCULA TÁCTICA PROPIA (10x10)</h3>
-                        <span class="board-hint">Haz clic en una casilla para colocar el barco seleccionado</span>
+                        <h3>TU HOJA DE DEFENSA (10x10)</h3>
+                        <span class="board-hint">Haz clic sobre las casillas para marcar tus naves</span>
                     </div>
                     <div class="grid-container" id="placement-grid"></div>
                 </div>
@@ -184,68 +235,63 @@
             </div>
         </section>
 
-        <!-- SECCIÓN 4: ARENA DE BATALLA -->
+        <!-- SECCIÓN 4: ARENA DE BATALLA (DOBLE HOJA) -->
         <section id="view-battle" class="view-section hidden">
             
-            <!-- Barra Superior de Estado de Combate -->
-            <div class="battle-hud glass-panel">
+            <!-- Barra Superior de Estado -->
+            <div class="paper-tape battle-hud">
                 <div class="hud-player hud-self">
-                    <div class="hud-avatar">🛡️</div>
                     <div class="hud-details">
-                        <span id="hud-my-name" class="hud-name">Almirante</span>
-                        <div class="hud-fleet-hp" id="hud-my-hp">
-                            <!-- Iconos de barcos propios -->
-                        </div>
+                        <span id="hud-my-name" class="hud-name">Capitán Tú</span>
+                        <div class="hud-fleet-hp" id="hud-my-hp"></div>
                     </div>
                 </div>
 
                 <div class="hud-center">
                     <div id="turn-banner" class="turn-banner your-turn">
-                        <span class="turn-pulse"></span>
-                        <span id="turn-text">¡ES TU TURNO DE FUEGO!</span>
+                        <span id="turn-text">¡ES TU TURNO DE DISPARAR!</span>
                     </div>
-                    <div class="turn-counter">Turno <span id="turn-number">1</span> // Sala <span id="battle-room-id" class="font-mono">WAR-XXXX</span></div>
+                    <div class="turn-counter">Turno <span id="turn-number">1</span> // Hoja <span id="battle-room-id" class="font-mono">WAR-XXXX</span></div>
                 </div>
 
                 <div class="hud-player hud-opp">
                     <div class="hud-details align-right">
                         <span id="hud-opp-name" class="hud-name">Oponente</span>
-                        <div class="hud-fleet-hp" id="hud-opp-hp">
-                            <!-- Iconos de barcos enemigos -->
-                        </div>
+                        <div class="hud-fleet-hp" id="hud-opp-hp"></div>
                     </div>
-                    <div class="hud-avatar">⚔️</div>
                 </div>
             </div>
 
             <!-- Tableros de Combate Dobles -->
             <div class="battle-arenas">
                 
-                <!-- Tablero 1: Radar Enemigo (Atacar aquí) -->
-                <div class="arena-board glass-panel radar-panel">
+                <!-- Tablero 1: Hoja de Ataque (Disparar al enemigo) -->
+                <div class="paper-sheet arena-board radar-panel">
+                    <div class="sheet-pin"></div>
                     <div class="arena-header">
-                        <h3>📡 RADAR ENEMIGO // ZONA DE ATAQUE</h3>
-                        <span class="badge-attack">Haz clic en una coordenada para disparar</span>
+                        <h3>HOJA DE ATAQUE // CUADRÍCULA RIVAL</h3>
+                        <span class="badge-attack">Haz clic para disparar tu lápiz</span>
                     </div>
                     <div class="grid-container" id="radar-grid"></div>
                 </div>
 
-                <!-- Tablero 2: Flota Propia (Ver estado y daños) -->
-                <div class="arena-board glass-panel fleet-panel">
+                <!-- Tablero 2: Hoja Propia (Ver daños recibidos) -->
+                <div class="paper-sheet arena-board fleet-panel">
+                    <div class="sheet-pin"></div>
                     <div class="arena-header">
-                        <h3>🛡️ TU FLOTA // ESTADO DE DEFENSA</h3>
-                        <span class="badge-defense">Monitorea los impactos enemigos</span>
+                        <h3>TU HOJA // ESTADO DE TUS BARCOS</h3>
+                        <span class="badge-defense">Impactos recibidos</span>
                     </div>
                     <div class="grid-container" id="own-battle-grid"></div>
                 </div>
 
             </div>
 
-            <!-- Log de Combate y Chat Rápido -->
-            <div class="combat-ticker glass-panel">
-                <div class="ticker-title">📡 TELEMETRÍA NAVAL:</div>
+            <!-- Ticker de Cuaderno -->
+            <div class="paper-sheet combat-ticker">
+                <div class="ticker-title">REGISTRO DE DISPAROS:</div>
                 <div id="combat-log" class="ticker-messages">
-                    <div class="log-entry log-system">Sistemas en línea. ¡Que comience el combate!</div>
+                    <div class="log-entry log-system">Lápices listos. ¡Que comience el duelo en el cuaderno!</div>
                 </div>
             </div>
 
@@ -255,8 +301,9 @@
 
     <!-- MODAL DE LOGIN / REGISTRO -->
     <div id="modal-auth" class="modal-backdrop hidden">
-        <div class="modal-card glass-panel">
+        <div class="paper-sheet modal-card">
             <button class="modal-close" id="btn-close-auth">✕</button>
+            <div class="sheet-pin"></div>
             
             <div class="modal-tabs">
                 <button class="tab-btn active" id="tab-login">Iniciar Sesión</button>
@@ -266,85 +313,85 @@
             <!-- Formulario Login -->
             <form id="form-login" class="auth-form">
                 <div class="form-group">
-                    <label for="login-username">Almirante / Usuario:</label>
-                    <input type="text" id="login-username" class="input-field" required placeholder="Tu nombre de usuario">
+                    <label for="login-username">Nombre de Capitán / Usuario:</label>
+                    <input type="text" id="login-username" class="notebook-input" required placeholder="Tu nombre">
                 </div>
                 <div class="form-group">
-                    <label for="login-password">Contraseña de Mando:</label>
-                    <input type="password" id="login-password" class="input-field" required placeholder="••••••••">
+                    <label for="login-password">Contraseña:</label>
+                    <input type="password" id="login-password" class="notebook-input" required placeholder="••••••••">
                 </div>
                 <div id="login-error" class="auth-error hidden"></div>
-                <button type="submit" class="btn btn-primary btn-block btn-lg mt-3">Ingresar al Puente de Mando</button>
+                <button type="submit" class="btn btn-ink btn-block btn-lg mt-3">Ingresar al Cuaderno</button>
             </form>
 
             <!-- Formulario Registro -->
             <form id="form-register" class="auth-form hidden">
                 <div class="form-group">
-                    <label for="reg-username">Nombre de Almirante:</label>
-                    <input type="text" id="reg-username" class="input-field" required placeholder="Entre 3 y 20 caracteres" minlength="3" maxlength="20">
+                    <label for="reg-username">Nombre de Capitán:</label>
+                    <input type="text" id="reg-username" class="notebook-input" required placeholder="Entre 3 y 20 letras" minlength="3" maxlength="20">
                 </div>
                 <div class="form-group">
-                    <label for="reg-password">Contraseña Segura:</label>
-                    <input type="password" id="reg-password" class="input-field" required placeholder="Mínimo 4 caracteres" minlength="4">
+                    <label for="reg-password">Contraseña:</label>
+                    <input type="password" id="reg-password" class="notebook-input" required placeholder="Mínimo 4 caracteres" minlength="4">
                 </div>
                 <div id="reg-error" class="auth-error hidden"></div>
-                <button type="submit" class="btn btn-accent btn-block btn-lg mt-3">Registrar Cuenta & Guardar Récords</button>
+                <button type="submit" class="btn btn-stamp btn-block btn-lg mt-3">Registrar Cuenta & Guardar Récords</button>
             </form>
         </div>
     </div>
 
-    <!-- DRAWER / MODAL DE HISTORIAL & PERFIL -->
+    <!-- MODAL DE HISTORIAL & PERFIL -->
     <div id="modal-history" class="modal-backdrop hidden">
-        <div class="modal-card glass-panel history-modal-card">
+        <div class="paper-sheet modal-card history-modal-card">
             <button class="modal-close" id="btn-close-history">✕</button>
+            <div class="sheet-pin"></div>
             
             <div class="profile-summary">
-                <div class="profile-avatar">⚓</div>
                 <div class="profile-info">
-                    <h2 id="profile-name">Almirante</h2>
-                    <p class="profile-joined">Historial de Servicio Naval</p>
+                    <h2 id="profile-name">Capitán</h2>
+                    <p class="profile-joined">Hoja de Récords y Partidas Jugadas</p>
                 </div>
             </div>
 
             <!-- Tarjetas de Estadísticas -->
             <div class="stats-grid">
-                <div class="stat-card glass-panel">
+                <div class="stat-card">
                     <span class="stat-num" id="stat-total">0</span>
                     <span class="stat-label">Partidas</span>
                 </div>
-                <div class="stat-card glass-panel stat-win">
+                <div class="stat-card stat-win">
                     <span class="stat-num" id="stat-wins">0</span>
                     <span class="stat-label">Victorias</span>
                 </div>
-                <div class="stat-card glass-panel stat-loss">
+                <div class="stat-card stat-loss">
                     <span class="stat-num" id="stat-losses">0</span>
                     <span class="stat-label">Derrotas</span>
                 </div>
-                <div class="stat-card glass-panel stat-rate">
+                <div class="stat-card stat-rate">
                     <span class="stat-num" id="stat-rate">0%</span>
                     <span class="stat-label">Win Rate</span>
                 </div>
             </div>
 
             <!-- Lista de Historial -->
-            <h3 class="history-title">Registro de Batallas Recientes</h3>
+            <h3 class="history-title">Partidas Anteriores en Cuaderno</h3>
             <div class="history-list" id="history-container">
                 <div class="empty-state">No hay partidas registradas aún.</div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE FIN DE JUEGO (VICTORIA / DERROTA) -->
+    <!-- MODAL DE FIN DE JUEGO -->
     <div id="modal-gameover" class="modal-backdrop hidden">
-        <div class="modal-card glass-panel gameover-card" id="gameover-card">
-            <div class="gameover-icon" id="gameover-icon">🏆</div>
-            <h2 class="gameover-title" id="gameover-title">¡VICTORIA NAVAL!</h2>
-            <p class="gameover-reason" id="gameover-reason">Has hundido toda la flota enemiga.</p>
+        <div class="paper-sheet modal-card gameover-card" id="gameover-card">
+            <div class="sheet-pin"></div>
+            <h2 class="gameover-title" id="gameover-title">¡VICTORIA!</h2>
+            <p class="gameover-reason" id="gameover-reason">Has hundido todos los barcos del rival.</p>
 
-            <div class="gameover-stats glass-panel">
+            <div class="gameover-stats">
                 <div class="g-stat">
                     <span class="g-num" id="go-turns">0</span>
-                    <span class="g-lbl">Turnos Totales</span>
+                    <span class="g-lbl">Turnos Jugados</span>
                 </div>
                 <div class="g-stat">
                     <span class="g-num" id="go-duration">0s</span>
@@ -353,7 +400,7 @@
             </div>
 
             <div class="gameover-actions">
-                <button id="btn-gameover-lobby" class="btn btn-primary btn-lg btn-block">Volver al Lobby</button>
+                <button id="btn-gameover-lobby" class="btn btn-ink btn-lg btn-block">Volver al Cuaderno Principal</button>
             </div>
         </div>
     </div>

@@ -1,5 +1,5 @@
 /**
- * app.js - Lógica de Cliente Web para BattleMish
+ * app.js - Lógica de Cliente Web para BattleMish (Estilo Hoja de Cuaderno)
  * Gestión de estado, interfaz de usuario SPA, WebSockets y combate en tiempo real.
  */
 
@@ -76,7 +76,7 @@ class BattleMishApp {
         // Botón sonido
         document.getElementById('btn-toggle-sound').addEventListener('click', (e) => {
             const enabled = window.soundEngine.toggle();
-            e.target.textContent = enabled ? '🔊' : '🔇';
+            e.currentTarget.style.opacity = enabled ? '1' : '0.4';
         });
 
         // Autenticación
@@ -265,7 +265,7 @@ class BattleMishApp {
         document.getElementById('stat-rate').textContent = `${this.user.win_rate}%`;
 
         const container = document.getElementById('history-container');
-        container.innerHTML = '<div class="empty-state">Cargando registros navales...</div>';
+        container.innerHTML = '<div class="empty-state">Cargando registros...</div>';
 
         try {
             const res = await fetch('/api/history', {
@@ -281,18 +281,18 @@ class BattleMishApp {
                     item.className = `history-item ${isWin ? 'win' : 'loss'}`;
                     item.innerHTML = `
                         <div>
-                            <strong>${isWin ? '🏆 VICTORIA' : '💀 DERROTA'}</strong> vs <em>${m.opponent}</em>
-                            <div style="font-size:0.75rem; color:var(--text-dim); margin-top:2px;">${m.reason} // ${dateStr}</div>
+                            <strong>[${isWin ? 'VICTORIA' : 'DERROTA'}]</strong> vs <em>${m.opponent}</em>
+                            <div style="font-size:0.85rem; color:var(--pencil-gray); margin-top:2px;">${m.reason} // ${dateStr}</div>
                         </div>
-                        <div style="text-align:right; font-family:var(--font-mono); font-size:0.85rem;">
+                        <div style="text-align:right; font-family:var(--font-mono); font-size:0.9rem;">
                             <span>${m.turns} Turnos</span><br>
-                            <span style="color:var(--text-muted); font-size:0.75rem;">${m.duration_seconds}s</span>
+                            <span style="color:var(--pencil-light); font-size:0.8rem;">${m.duration_seconds}s</span>
                         </div>
                     `;
                     container.appendChild(item);
                 });
             } else {
-                container.innerHTML = '<div class="empty-state">No tienes partidas registradas aún. ¡Entra a una batalla!</div>';
+                container.innerHTML = '<div class="empty-state">No hay partidas registradas aún. ¡Juega tu primer duelo!</div>';
             }
         } catch (e) {
             container.innerHTML = '<div class="empty-state">Error al cargar historial.</div>';
@@ -313,14 +313,14 @@ class BattleMishApp {
                     item.innerHTML = `
                         <div>
                             <strong>${r.room_name}</strong>
-                            <div style="font-size:0.7rem; color:var(--text-dim); font-family:var(--font-mono);">${r.room_id} // Host: ${r.host_name}</div>
+                            <div style="font-size:0.8rem; color:var(--pencil-gray); font-family:var(--font-mono);">${r.room_id} // Host: ${r.host_name}</div>
                         </div>
-                        <button class="btn btn-accent btn-xs" onclick="window.app.joinRoom('${r.room_id}')">Unirse</button>
+                        <button class="btn btn-stamp btn-xs" onclick="window.app.joinRoom('${r.room_id}')">Entrar</button>
                     `;
                     list.appendChild(item);
                 });
             } else {
-                list.innerHTML = '<div class="empty-state">No hay salas en espera. ¡Crea una!</div>';
+                list.innerHTML = '<div class="empty-state">No hay hojas de partida en espera. ¡Crea una!</div>';
             }
         } catch (e) {
             console.error(e);
@@ -371,7 +371,7 @@ class BattleMishApp {
         if (this.token) {
             wsUrl += `?token=${encodeURIComponent(this.token)}`;
         } else {
-            const guest = prompt("Ingresa tu nombre de Almirante para jugar:") || `Almirante_${Math.floor(Math.random()*1000)}`;
+            const guest = prompt("Ingresa tu nombre de Capitán para jugar:") || `Capitán_${Math.floor(Math.random()*1000)}`;
             wsUrl += `?guest_name=${encodeURIComponent(guest)}`;
         }
 
@@ -426,12 +426,12 @@ class BattleMishApp {
         }
         else if (mtype === 'PLACEMENT_ACK') {
             document.getElementById('btn-confirm-fleet').disabled = true;
-            document.getElementById('btn-confirm-fleet').textContent = '⚓ Flota Lista - Esperando Rival...';
+            document.getElementById('btn-confirm-fleet').textContent = 'Cuadrícula Lista - Esperando Rival...';
         }
         else if (mtype === 'OPPONENT_READY') {
             const oppStatus = document.getElementById('opponent-placement-status');
             oppStatus.className = 'status-indicator ready';
-            document.getElementById('opp-place-text').textContent = `¡${this.opponentName} está listo!`;
+            document.getElementById('opp-place-text').textContent = `¡${this.opponentName} terminó de dibujar sus barcos!`;
         }
         else if (mtype === 'START_BATTLE') {
             this.isMyTurn = msg.your_turn;
@@ -464,8 +464,8 @@ class BattleMishApp {
         input.select();
         navigator.clipboard.writeText(input.value);
         const btn = document.getElementById('btn-copy-link');
-        btn.textContent = '✅ ¡Copiado!';
-        setTimeout(() => btn.textContent = '📋 Copiar Link', 2000);
+        btn.textContent = '¡Copiado!';
+        setTimeout(() => btn.textContent = 'Copiar Link', 2000);
     }
 
     leaveRoom() {
@@ -509,7 +509,7 @@ class BattleMishApp {
             card.innerHTML = `
                 <div>
                     <strong>${spec.name}</strong>
-                    <div style="font-size:0.75rem; color:var(--text-muted);">${spec.size} casillas ${isPlaced ? '✓' : ''}</div>
+                    <div style="font-size:0.85rem; color:var(--pencil-gray);">${spec.size} casillas ${isPlaced ? '[OK]' : ''}</div>
                 </div>
                 <div class="ship-blocks">${blocksHtml}</div>
             `;
@@ -695,7 +695,7 @@ class BattleMishApp {
         const btn = document.getElementById('btn-confirm-fleet');
         const allPlaced = this.placedShips.length === FLEET_SPEC.length;
         btn.disabled = !allPlaced;
-        btn.textContent = allPlaced ? '⚔️ Confirmar & Desplegar Flota' : `Coloca todos tus barcos (${this.placedShips.length}/5)`;
+        btn.textContent = allPlaced ? 'Confirmar & Desplegar Flota' : `Dibuja todos tus barcos (${this.placedShips.length}/5)`;
     }
 
     confirmFleet() {
@@ -708,7 +708,7 @@ class BattleMishApp {
 
     // --- Fase de Batalla ---
     initBattleView() {
-        document.getElementById('hud-my-name').textContent = (this.user ? this.user.username : 'Tú');
+        document.getElementById('hud-my-name').textContent = (this.user ? this.user.username : 'Capitán Tú');
         document.getElementById('hud-opp-name').textContent = this.opponentName;
         document.getElementById('battle-room-id').textContent = this.currentRoomId;
 
@@ -747,7 +747,7 @@ class BattleMishApp {
 
                 const val = this.radarGrid[r][c];
                 if (val === 'HIT') cell.classList.add('cell-hit'), cell.textContent = '✕';
-                if (val === 'MISS') cell.classList.add('cell-miss'), cell.textContent = '●';
+                if (val === 'MISS') cell.classList.add('cell-miss'), cell.textContent = '•';
                 if (val === 'SUNK') cell.classList.add('cell-sunk'), cell.textContent = '✕';
 
                 cell.addEventListener('click', () => this.fireShot(r, c));
@@ -785,7 +785,7 @@ class BattleMishApp {
                     cell.textContent = '✕';
                 } else if (this.myGrid[r][c] === 'MISS') {
                     cell.classList.add('cell-miss');
-                    cell.textContent = '●';
+                    cell.textContent = '•';
                 }
 
                 this.ownBattleGridEl.appendChild(cell);
@@ -820,16 +820,16 @@ class BattleMishApp {
             if (msg.result === 'AGUA') {
                 this.radarGrid[r][c] = 'MISS';
                 window.soundEngine.playWater();
-                this.addCombatLog(`Tu disparo a ${msg.coord}: AGUA (Sin impacto)`, 'log-miss');
+                this.addCombatLog(`Disparo a ${msg.coord}: AGUA (Lápiz azul)`, 'log-miss');
             } else if (msg.result === 'TOCADO') {
                 this.radarGrid[r][c] = 'HIT';
                 window.soundEngine.playHit();
-                this.addCombatLog(`Tu disparo a ${msg.coord}: ¡IMPACTO DIRECTO!`, 'log-hit');
+                this.addCombatLog(`Disparo a ${msg.coord}: ¡IMPACTO! (Tocado)`, 'log-hit');
             } else if (msg.result === 'HUNDIDO') {
                 this.radarGrid[r][c] = 'SUNK';
                 this.oppShipsAlive = msg.defender_ships_remaining;
                 window.soundEngine.playHit();
-                this.addCombatLog(`Tu disparo a ${msg.coord}: ¡HUNDIDO! Has destruido el ${msg.sunk_ship} enemigo.`, 'log-sunk');
+                this.addCombatLog(`Disparo a ${msg.coord}: ¡HUNDIDO! Destruiste el ${msg.sunk_ship} rival.`, 'log-sunk');
             }
             this.renderRadarGrid();
         } else {
@@ -843,9 +843,9 @@ class BattleMishApp {
                 window.soundEngine.playHit();
                 this.myShipsAlive = msg.defender_ships_remaining;
                 if (msg.result === 'HUNDIDO') {
-                    this.addCombatLog(`ALERTA: ${msg.attacker} ha hundido tu ${msg.sunk_ship}.`, 'log-hit');
+                    this.addCombatLog(`ALERTA: ${msg.attacker} tachó y hundió tu ${msg.sunk_ship}.`, 'log-hit');
                 } else {
-                    this.addCombatLog(`ALERTA: Disparo enemigo en ${msg.coord} averió tu nave.`, 'log-hit');
+                    this.addCombatLog(`ALERTA: Disparo enemigo en ${msg.coord} impactó en tu barco.`, 'log-hit');
                 }
             }
             this.renderOwnBattleGrid();
@@ -862,7 +862,7 @@ class BattleMishApp {
         counter.textContent = this.turnCount;
         if (this.isMyTurn) {
             banner.className = 'turn-banner your-turn';
-            text.textContent = '¡ES TU TURNO DE FUEGO!';
+            text.textContent = '¡ES TU TURNO DE DISPARAR!';
         } else {
             banner.className = 'turn-banner opp-turn';
             text.textContent = `ESPERANDO AL OPONENTE (${this.opponentName})...`;
@@ -872,8 +872,8 @@ class BattleMishApp {
     updateFleetHpUI() {
         const myHp = document.getElementById('hud-my-hp');
         const oppHp = document.getElementById('hud-opp-hp');
-        myHp.innerHTML = `🚢 `.repeat(this.myShipsAlive);
-        oppHp.innerHTML = `🚢 `.repeat(this.oppShipsAlive);
+        myHp.textContent = `Barcos a flote: ${this.myShipsAlive} / 5`;
+        oppHp.textContent = `Barcos a flote: ${this.oppShipsAlive} / 5`;
     }
 
     addCombatLog(text, className = '') {
@@ -888,9 +888,8 @@ class BattleMishApp {
     handleGameOver(msg) {
         const isWin = (msg.winner === (this.user ? this.user.username : document.getElementById('slot-p1-name').textContent));
         
-        document.getElementById('gameover-icon').textContent = isWin ? '🏆' : '💀';
-        document.getElementById('gameover-title').textContent = isWin ? '¡VICTORIA NAVAL!' : '¡DERROTA NAVAL!';
-        document.getElementById('gameover-title').style.color = isWin ? 'var(--accent-green)' : 'var(--accent-red)';
+        document.getElementById('gameover-title').textContent = isWin ? '¡VICTORIA EN EL CUADERNO!' : '¡DERROTA NAVAL!';
+        document.getElementById('gameover-title').style.color = isWin ? '#15803d' : '#dc2626';
         document.getElementById('gameover-reason').textContent = msg.reason;
         document.getElementById('go-turns').textContent = msg.turns || this.turnCount;
         document.getElementById('go-duration').textContent = `${msg.duration_seconds || 0}s`;
