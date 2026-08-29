@@ -128,17 +128,59 @@ def api_history(username: str = Depends(get_current_username)):
 
 @app.get("/api/rooms")
 def api_list_rooms():
-    """Retorna las salas disponibles que están esperando jugadores."""
+    """Retorna las salas disponibles que están esperando jugadores y limpia salas inactivas/abandonadas."""
+    now = time.time()
+    stale_keys = []
+    
+    for r_id, room in list(active_rooms.items()):
+        # Si la sala lleva más de 30 minutos, o si no tiene host conectado en espera, o si ya terminó
+        if room["status"] == "FINISHED" or (now - room.get("created_at", now) > 1800):
+            stale_keys.append(r_id)
+        elif room["status"] == "WAITING" and room["player1"] is None and (now - room.get("created_at", now) > 60):
+            stale_keys.append(r_id)
+
+    for k in stale_keys:
+        active_rooms.pop(k, None)
+
     waiting_rooms = []
     for r_id, room in active_rooms.items():
-        if room["status"] == "WAITING" and not room["is_private"]:
+        # Solo mostrar salas en espera con anfitrión conectado
+        if room["status"] == "WAITING" and not room["is_private"] and room["player1"] is not None:
+            host_name = room["player1"].username if hasattr(room["player1"], "username") else "Anónimo"
             waiting_rooms.append({
                 "room_id": r_id,
                 "room_name": room["name"],
-                "host_name": room["player1"]["name"] if room["player1"] else "Anónimo",
+                "host_name": host_name,
                 "created_at": room["created_at"]
             })
+            
     return {"success": True, "rooms": waiting_rooms}
+
+
+@app.delete("/api/rooms/{room_id}")
+def api_delete_room(room_id: str):
+    """Permite cerrar o eliminar una sala activa o de testeo."""
+    clean_id = room_id.strip().upper()
+    if clean_id in active_rooms:
+        room = active_rooms.pop(clean_id)
+        # Si hay conexiones abiertas, cerrarlas
+        for p in (room.get("player1"), room.get("player2")):
+            if p and hasattr(p, "ws"):
+                try:
+                    asyncio.create_task(p.ws.close())
+                except Exception:
+                    pass
+        return {"success": True, "message": f"Sala {clean_id} cerrada exitosamente."}
+    return {"success": False, "message": f"La sala {clean_id} no existe o ya fue cerrada."}
+
+
+@app.post("/api/rooms/clear-test")
+def api_clear_test_rooms():
+    """Elimina todas las salas en espera o de testeo."""
+    cleared = list(active_rooms.keys())
+    active_rooms.clear()
+    return {"success": True, "message": f"Se han cerrado {len(cleared)} salas.", "cleared": cleared}
+
 
 
 @app.post("/api/rooms/create")
@@ -424,6 +466,10 @@ async def websocket_battle_endpoint(
         else:
             room["player2"] = None
         
+        # Si la sala estaba esperando rival y el host se va, o si ambos se fueron, limpiar la sala inmediatamente
+        if (room["status"] == "WAITING" and room["player1"] is None) or (room["player1"] is None and room["player2"] is None):
+            active_rooms.pop(clean_room_id, None)
+
         if other_session and room["status"] in ("PLACEMENT", "BATTLE"):
             room["status"] = "FINISHED"
             try:
@@ -445,6 +491,8 @@ async def websocket_battle_endpoint(
                 "loser": username,
                 "reason": f"El oponente ({username}) se ha desconectado de la partida."
             })
+            active_rooms.pop(clean_room_id, None)
+
 
 
 def validate_web_fleet(ships_data: List[dict]) -> Optional[Board]:
