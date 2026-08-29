@@ -96,8 +96,13 @@ class BattleMishApp {
         document.getElementById('btn-create-room').addEventListener('click', () => this.createRoom());
         document.getElementById('btn-join-room').addEventListener('click', () => this.joinRoomFromInput());
         document.getElementById('btn-refresh-rooms').addEventListener('click', () => this.fetchPublicRooms());
+        const btnClear = document.getElementById('btn-clear-rooms');
+        if (btnClear) {
+            btnClear.addEventListener('click', () => this.clearAllRooms());
+        }
         document.getElementById('btn-copy-link').addEventListener('click', () => this.copyShareLink());
         document.getElementById('btn-leave-room').addEventListener('click', () => this.leaveRoom());
+
 
         // Colocación
         document.getElementById('btn-rotate-ship').addEventListener('click', () => this.toggleOrientation());
@@ -315,13 +320,34 @@ class BattleMishApp {
                             <strong>${r.room_name}</strong>
                             <div style="font-size:0.8rem; color:var(--pencil-gray); font-family:var(--font-mono);">${r.room_id} // Host: ${r.host_name}</div>
                         </div>
-                        <button class="btn btn-stamp btn-xs" onclick="window.app.joinRoom('${r.room_id}')">Entrar</button>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <button class="btn btn-stamp btn-xs" onclick="window.app.joinRoom('${r.room_id}')">Entrar</button>
+                            <button class="btn btn-link btn-xs" style="color:var(--pencil-light); padding:2px 6px;" title="Cerrar esta sala" onclick="window.app.deleteRoom('${r.room_id}')">✕</button>
+                        </div>
                     `;
                     list.appendChild(item);
                 });
             } else {
                 list.innerHTML = '<div class="empty-state">No hay hojas de partida en espera. ¡Crea una!</div>';
             }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async deleteRoom(roomId) {
+        try {
+            await fetch(`/api/rooms/${encodeURIComponent(roomId)}`, { method: 'DELETE' });
+            this.fetchPublicRooms();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async clearAllRooms() {
+        try {
+            await fetch('/api/rooms/clear-test', { method: 'POST' });
+            this.fetchPublicRooms();
         } catch (e) {
             console.error(e);
         }
@@ -469,10 +495,15 @@ class BattleMishApp {
     }
 
     leaveRoom() {
+        if (this.currentRoomId) {
+            fetch(`/api/rooms/${encodeURIComponent(this.currentRoomId)}`, { method: 'DELETE' }).catch(() => {});
+        }
         if (this.ws) this.ws.close();
         this.showView('lobby');
+        this.fetchPublicRooms();
         window.history.pushState({}, document.title, window.location.pathname);
     }
+
 
     // --- Fase de Posicionamiento ---
     initPlacementView() {
