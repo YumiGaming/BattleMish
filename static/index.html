@@ -141,12 +141,16 @@
                     <div class="public-rooms-container">
                         <div class="rooms-header">
                             <span>Hojas esperando rival</span>
-                            <button id="btn-refresh-rooms" class="btn btn-link btn-xs">Actualizar</button>
+                            <div style="display:flex; gap:8px;">
+                                <button id="btn-clear-rooms" class="btn btn-link btn-xs" style="color:var(--ink-red);" title="Cerrar todas las salas de testeo">Limpiar</button>
+                                <button id="btn-refresh-rooms" class="btn btn-link btn-xs">Actualizar</button>
+                            </div>
                         </div>
                         <div id="rooms-list" class="rooms-list">
                             <div class="empty-state">Buscando hojas de juego abiertas...</div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </section>
