@@ -251,161 +251,268 @@ self.server_socket.settimeout(1.0)
 
 ## 6.6. Descripción Exhaustiva de Métodos de Sockets
 
-Se documentan a continuación **13 métodos fundamentales de la API de Sockets**, detallando su sintaxis en Python, parámetros, valor de retorno, protocolo asociado, ejemplo y referencia exacta dentro del código desarrollado:
+A continuación se detalla la documentación técnica de los **15 métodos fundamentales de la API de Sockets**, cumpliendo con los 9 puntos exigidos en la pauta de evaluación:
 
 ### 1. `socket()`
-- **Propósito:** Crea un nuevo punto final de comunicación y retorna un objeto socket descriptor.
-- **Sintaxis:** `socket.socket(family=AF_INET, type=SOCK_STREAM, proto=0)`
-- **Parámetros:**
-  - `family`: Familia de direcciones (`AF_INET` para IPv4, `AF_INET6` para IPv6, `AF_UNIX` para IPC local).
-  - `type`: Tipo de servicio (`SOCK_STREAM` para TCP, `SOCK_DGRAM` para UDP, `SOCK_RAW` para paquetes crudos).
-  - `proto`: Protocolo específico (usualmente `0`).
-- **Retorno:** Objeto `socket.socket`.
-- **Protocolo:** Ambos (TCP y UDP).
-- **Ejemplo:** `s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)`
-- **Uso en el programa:** Sí. Utilizado en `server.py` (Línea 232), `client.py` (Línea 75) y `test_game.py`.
+- **Nombre del método:** `socket()`
+- **Propósito o función:** Crea un nuevo punto final de comunicación (*endpoint*) en el sistema operativo y retorna un descriptor de socket.
+- **Sintaxis en Python:** `sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM, proto=0)`
+- **Explicación de sus parámetros principales:**
+  - `family`: Familia de protocolos de red (`AF_INET` para IPv4, `AF_INET6` para IPv6, `AF_UNIX` para IPC local).
+  - `type`: Tipo de transporte (`SOCK_STREAM` para flujo TCP orientado a conexión, `SOCK_DGRAM` para datagramas UDP).
+  - `proto`: Protocolo específico de la capa de transporte (por defecto `0` selecciona automáticamente el protocolo según el tipo).
+- **Valor retornado:** Objeto de tipo `socket.socket`.
+- **Protocolo en el que se utiliza:** Ambos (TCP y UDP).
+- **Ejemplo breve de uso:**
+  ```python
+  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  ```
+- **Indicación de si fue utilizado:** Sí.
+- **Referencia en el código:** `server.py` (Línea 232), `client.py` (Línea 75) y `test_game.py` (Líneas 23, 79).
 
 ---
 
 ### 2. `bind()`
-- **Propósito:** Asocia un socket a una dirección de red local específica (interfaz IP y número de puerto).
-- **Sintaxis:** `sock.bind((host, port))`
-- **Parámetros:** Tupla `(host, port)` donde `host` es una cadena (ej. `"0.0.0.0"` o `"127.0.0.1"`) y `port` es un entero de 16 bits (`1..65535`).
-- **Retorno:** `None` (lanza `OSError` si la dirección está en uso o no es válida).
-- **Protocolo:** Ambos (Obligatorio en servidores TCP/UDP; opcional en clientes).
-- **Ejemplo:** `server_sock.bind(("0.0.0.0", 8888))`
-- **Uso en el programa:** Sí. Utilizado en `server.py` (Línea 239) para fijar el puerto del servidor.
+- **Nombre del método:** `bind()`
+- **Propósito o función:** Asocia el socket a una dirección de red e interfaz local específica (IP y número de puerto).
+- **Sintaxis en Python:** `sock.bind((host, port))`
+- **Explicación de sus parámetros principales:**
+  - `address`: Tupla `(host, port)` donde `host` es la cadena con la dirección IP de escucha (ej. `"0.0.0.0"` para todas las interfaces o `"127.0.0.1"`) y `port` es el entero del puerto (`1..65535`).
+- **Valor retornado:** `None` (lanza `OSError` si el puerto ya está en uso o no se tienen privilegios).
+- **Protocolo en el que se utiliza:** Ambos (Obligatorio en servidores TCP y UDP; opcional en clientes).
+- **Ejemplo breve de uso:**
+  ```python
+  server_sock.bind(("0.0.0.0", 8888))
+  ```
+- **Indicación de si fue utilizado:** Sí.
+- **Referencia en el código:** `server.py` (Línea 239).
 
 ---
 
 ### 3. `listen()`
-- **Propósito:** Pone al socket TCP en modo de escucha pasiva, habilitándolo para aceptar solicitudes de conexión entrantes.
-- **Sintaxis:** `sock.listen(backlog)`
-- **Parámetros:** `backlog`: Número máximo de conexiones pendientes en la cola del kernel antes de rechazar nuevas solicitudes.
-- **Retorno:** `None`.
-- **Protocolo:** Exclusivo de TCP (`SOCK_STREAM`).
-- **Ejemplo:** `server_sock.listen(10)`
-- **Uso en el programa:** Sí. Utilizado en `server.py` (Línea 245) para encolar clientes pendientes.
+- **Nombre del método:** `listen()`
+- **Propósito o función:** Coloca el socket en modo de escucha pasiva, habilitándolo para recibir y encolar solicitudes de conexión entrantes.
+- **Sintaxis en Python:** `sock.listen(backlog=10)`
+- **Explicación de sus parámetros principales:**
+  - `backlog`: Número entero que determina el tamaño máximo de la cola de conexiones pendientes antes de rechazar nuevas solicitudes.
+- **Valor retornado:** `None`.
+- **Protocolo en el que se utiliza:** Exclusivo de TCP (`SOCK_STREAM`).
+- **Ejemplo breve de uso:**
+  ```python
+  server_sock.listen(10)
+  ```
+- **Indicación de si fue utilizado:** Sí.
+- **Referencia en el código:** `server.py` (Línea 245).
 
 ---
 
 ### 4. `accept()`
-- **Propósito:** Extrae la primera conexión de la cola de escucha, creando un nuevo socket dedicado exclusivamente a la comunicación con ese cliente.
-- **Sintaxis:** `client_sock, client_addr = sock.accept()`
-- **Parámetros:** Ninguno.
-- **Retorno:** Tupla `(conn, address)` donde `conn` es el nuevo objeto socket y `address` es la tupla `(ip, port)` del cliente remoto.
-- **Protocolo:** Exclusivo de TCP (`SOCK_STREAM`).
-- **Ejemplo:** `conn, addr = server_sock.accept()`
-- **Uso en el programa:** Sí. Utilizado en `server.py` (Línea 256) dentro del bucle de atención de jugadores.
+- **Nombre del método:** `accept()`
+- **Propósito o función:** Extrae la primera solicitud de conexión de la cola de escucha y genera un **nuevo socket independiente** dedicado exclusivamente a la comunicación con ese cliente, dejando el socket original libre para seguir escuchando.
+- **Sintaxis en Python:** `client_sock, client_addr = server_sock.accept()`
+- **Explicación de sus parámetros principales:** No recibe parámetros obligatorios.
+- **Valor retornado:** Tupla `(conn, address)` donde `conn` es el nuevo objeto `socket.socket` del cliente y `address` es la tupla `(ip_cliente, puerto_cliente)`.
+- **Protocolo en el que se utiliza:** Exclusivo de TCP (`SOCK_STREAM`).
+- **Ejemplo breve de uso:**
+  ```python
+  conn, addr = server_sock.accept()
+  ```
+- **Indicación de si fue utilizado:** Sí.
+- **Referencia en el código:** `server.py` (Línea 256) dentro del bucle del servidor.
 
 ---
 
 ### 5. `connect()`
-- **Propósito:** Inicia activamente el establecimiento de conexión de tres vías (*Three-Way Handshake*) con un servidor remoto.
-- **Sintaxis:** `sock.connect((host, port))`
-- **Parámetros:** Tupla `(host, port)` que especifica la dirección de destino.
-- **Retorno:** `None` (lanza `ConnectionRefusedError` o `TimeoutError` si falla).
-- **Protocolo:** TCP (En UDP puede usarse para fijar un destino por defecto sin handshake).
-- **Ejemplo:** `client_sock.connect(("127.0.0.1", 8888))`
-- **Uso en el programa:** Sí. Utilizado en `client.py` (Línea 83) para conectarse a la partida.
+- **Nombre del método:** `connect()`
+- **Propósito o función:** Inicia el establecimiento de la conexión activa mediante el protocolo de tres vías (*Three-Way Handshake*) hacia un servidor remoto.
+- **Sintaxis en Python:** `sock.connect((host, port))`
+- **Explicación de sus parámetros principales:**
+  - `address`: Tupla `(host, port)` con la dirección IP/dominio y puerto del servidor remoto al que se desea conectar.
+- **Valor retornado:** `None` (lanza `ConnectionRefusedError` si el servidor no está disponible o `TimeoutError` si expira).
+- **Protocolo en el que se utiliza:** TCP (En UDP puede utilizarse para fijar la dirección destino por defecto sin handshake).
+- **Ejemplo breve de uso:**
+  ```python
+  client_sock.connect(("127.0.0.1", 8888))
+  ```
+- **Indicación de si fue utilizado:** Sí.
+- **Referencia en el código:** `client.py` (Línea 83).
 
 ---
 
 ### 6. `send()`
-- **Propósito:** Envía un bloque de bytes sobre un socket conectado. Puede enviar menos bytes de los solicitados si el buffer del kernel se llena (*Partial Send*).
-- **Sintaxis:** `bytes_sent = sock.send(bytes_data)`
-- **Parámetros:** `bytes_data`: Objeto `bytes` o `bytearray` con los datos a transmitir.
-- **Retorno:** Entero con el número real de bytes transmitidos.
-- **Protocolo:** TCP (requiere socket conectado).
-- **Ejemplo:** `sent = s.send(b"HOLA")`
-- **Uso en el programa:** Explicado conceptualmente; en la solución se utiliza `sendall()` por mayor seguridad contra envíos parciales.
+- **Nombre del método:** `send()`
+- **Propósito o función:** Envía datos de bytes sobre un socket conectado. Si los buffers del sistema están llenos, puede enviar menos bytes de los solicitados (*Partial Send*).
+- **Sintaxis en Python:** `bytes_sent = sock.send(data, flags=0)`
+- **Explicación de sus parámetros principales:**
+  - `data`: Objeto de tipo `bytes` o `bytearray` con los datos a transmitir.
+  - `flags`: Banderas de control de transmisión (opcional, por defecto `0`).
+- **Valor retornado:** Entero con la cantidad real de bytes enviados.
+- **Protocolo en el que se utiliza:** TCP (requiere conexión previa).
+- **Ejemplo breve de uso:**
+  ```python
+  enviados = sock.send(b"HOLA")
+  ```
+- **Indicación de si fue utilizado:** Documentado y analizado conceptualmente; en la solución se utiliza `sendall()` para evitar el riesgo de envíos parciales.
+- **Referencia en el código:** Explicado como contraparte técnica de `sendall()` en `protocol.py`.
 
 ---
 
 ### 7. `sendall()`
-- **Propósito:** Transmite continuamente un bloque de bytes completo hasta que todos los datos hayan sido enviados o ocurra un error irrecuperable.
-- **Sintaxis:** `sock.sendall(bytes_data)`
-- **Parámetros:** `bytes_data`: Buffer completo a transmitir.
-- **Retorno:** `None` en caso de éxito; lanza excepción en error.
-- **Protocolo:** TCP (`SOCK_STREAM`).
-- **Ejemplo:** `sock.sendall(header + json_payload)`
-- **Uso en el programa:** Sí. Utilizado en `protocol.py` (Línea 61) en la función `send_msg()`.
+- **Nombre del método:** `sendall()`
+- **Propósito o función:** Transmite continuamente los datos en un bucle interno del runtime hasta que la totalidad de los bytes hayan sido enviados al buffer de red o ocurra un error fatal.
+- **Sintaxis en Python:** `sock.sendall(data, flags=0)`
+- **Explicación de sus parámetros principales:**
+  - `data`: Objeto `bytes` completo que se desea enviar.
+  - `flags`: Banderas de envío opcionales.
+- **Valor retornado:** `None` en caso de éxito total (lanza excepción si falla antes de completar).
+- **Protocolo en el que se utiliza:** Exclusivo de TCP (`SOCK_STREAM`).
+- **Ejemplo breve de uso:**
+  ```python
+  sock.sendall(header + payload_bytes)
+  ```
+- **Indicación de si fue utilizado:** Sí.
+- **Referencia en el código:** `protocol.py` (Línea 61) en la función `send_msg()`.
 
 ---
 
 ### 8. `recv()`
-- **Propósito:** Recibe datos desde el flujo del socket TCP conectado.
-- **Sintaxis:** `data = sock.recv(bufsize)`
-- **Parámetros:** `bufsize`: Cantidad máxima de bytes a leer en una sola llamada (ej. 4096).
-- **Retorno:** Objeto `bytes` con los datos leídos. Si retorna `b""` (vacío), indica fin de flujo (`EOF`) por desconexión remota.
-- **Protocolo:** TCP (`SOCK_STREAM`).
-- **Ejemplo:** `chunk = sock.recv(4096)`
-- **Uso en el programa:** Sí. Utilizado en `protocol.py` (Línea 86) dentro de la función `_recv_all()`.
+- **Nombre del método:** `recv()`
+- **Propósito o función:** Lee y extrae bytes entrantes desde el buffer de recepción del socket TCP conectado.
+- **Sintaxis en Python:** `data = sock.recv(bufsize, flags=0)`
+- **Explicación de sus parámetros principales:**
+  - `bufsize`: Cantidad máxima de bytes a leer en una única llamada (ej. `4096`).
+  - `flags`: Banderas de lectura opcionales.
+- **Valor retornado:** Objeto `bytes`. Si retorna `b""` (cadena de bytes vacía), indica que el extremo remoto cerró la conexión (`EOF`).
+- **Protocolo en el que se utiliza:** Exclusivo de TCP (`SOCK_STREAM`).
+- **Ejemplo breve de uso:**
+  ```python
+  chunk = sock.recv(4096)
+  ```
+- **Indicación de si fue utilizado:** Sí.
+- **Referencia en el código:** `protocol.py` (Línea 86) dentro de la función de acumulación `_recv_all()`.
 
 ---
 
-### 9. `setsockopt()`
-- **Propósito:** Configura opciones de bajo nivel en el socket para alterar el comportamiento del protocolo o del sistema operativo.
-- **Sintaxis:** `sock.setsockopt(level, optname, value)`
-- **Parámetros:**
-  - `level`: Nivel de la opción (ej. `socket.SOL_SOCKET`, `socket.IPPROTO_TCP`).
-  - `optname`: Nombre de la opción (ej. `socket.SO_REUSEADDR`, `socket.SO_KEEPALIVE`).
-  - `value`: Valor booleano o numérico (ej. `1`).
-- **Retorno:** `None`.
-- **Protocolo:** Ambos (TCP y UDP).
-- **Ejemplo:** `s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)`
-- **Uso en el programa:** Sí. Utilizado en `server.py` (Línea 235) para permitir reutilización instantánea del puerto.
+### 9. `sendto()`
+- **Nombre del método:** `sendto()`
+- **Propósito o función:** Envía un datagrama UDP directamente a una dirección de red destino sin requerir establecimiento de conexión ni handshake.
+- **Sintaxis en Python:** `bytes_sent = sock.sendto(data, (dest_ip, dest_port))`
+- **Explicación de sus parámetros principales:**
+  - `data`: Objeto `bytes` con el datagrama a enviar.
+  - `address`: Tupla `(dest_ip, dest_port)` con el destino de cada paquete.
+- **Valor retornado:** Entero con la cantidad de bytes enviados.
+- **Protocolo en el que se utiliza:** Exclusivo de UDP (`SOCK_DGRAM`).
+- **Ejemplo breve de uso:**
+  ```python
+  udp_sock.sendto(b"DISPARO:A1", ("127.0.0.1", 9999))
+  ```
+- **Indicación de si fue utilizado:** No (Se incluye en el marco comparativo, ya que Battleship se implementó en TCP para garantizar integridad).
+- **Referencia en el código:** Mención comparativa en `INFORME_TALLER_REDES.md` (Sección 6.3).
 
 ---
 
-### 10. `settimeout()`
-- **Propósito:** Establece un límite de tiempo máximo para operaciones bloqueantes (`accept`, `connect`, `recv`, `send`).
-- **Sintaxis:** `sock.settimeout(seconds)`
-- **Parámetros:** `seconds`: Número flotante en segundos, o `None` para modo bloqueante indefinido.
-- **Retorno:** `None`.
-- **Protocolo:** Ambos (TCP y UDP).
-- **Ejemplo:** `sock.settimeout(10.0)`
-- **Uso en el programa:** Sí. Utilizado en `server.py` (Línea 248) y `client.py` (Línea 78).
+### 10. `recvfrom()`
+- **Nombre del método:** `recvfrom()`
+- **Propósito o función:** Recibe un datagrama UDP entrante junto con la dirección de origen del remitente.
+- **Sintaxis en Python:** `data, sender_addr = sock.recvfrom(bufsize)`
+- **Explicación de sus parámetros principales:**
+  - `bufsize`: Tamaño máximo del datagrama en bytes a recibir (ej. `2048`).
+- **Valor retornado:** Tupla `(data, (ip_origen, puerto_origen))`.
+- **Protocolo en el que se utiliza:** Exclusivo de UDP (`SOCK_DGRAM`).
+- **Ejemplo breve de uso:**
+  ```python
+  data, addr = udp_sock.recvfrom(2048)
+  ```
+- **Indicación de si fue utilizado:** No (Utilizado para contraste arquitectónico frente a `recv()` de TCP).
+- **Referencia en el código:** Sección 6.3 del informe.
 
 ---
 
-### 11. `shutdown()`
-- **Propósito:** Deshabilita de manera controlada los canales de lectura, escritura o ambos antes de cerrar el socket, enviando las señales TCP pertinentes (FIN).
-- **Sintaxis:** `sock.shutdown(how)`
-- **Parámetros:** `how`: `socket.SHUT_RD` (lectura), `socket.SHUT_WR` (escritura) o `socket.SHUT_RDWR` (ambos).
-- **Retorno:** `None`.
-- **Protocolo:** TCP (`SOCK_STREAM`).
-- **Ejemplo:** `sock.shutdown(socket.SHUT_RDWR)`
-- **Uso en el programa:** Sí. Utilizado en `server.py` (Línea 81) y `client.py` (Línea 298).
+### 11. `setsockopt()`
+- **Nombre del método:** `setsockopt()`
+- **Propósito o función:** Configura opciones de bajo nivel en el socket para modificar el comportamiento del sistema operativo y de la pila TCP/IP.
+- **Sintaxis en Python:** `sock.setsockopt(level, optname, value)`
+- **Explicación de sus parámetros principales:**
+  - `level`: Nivel del socket donde reside la opción (`socket.SOL_SOCKET`, `socket.IPPROTO_TCP`).
+  - `optname`: Constante con la opción a configurar (`socket.SO_REUSEADDR`, `socket.SO_KEEPALIVE`).
+  - `value`: Valor a asignar (entero `1` para habilitar, o estructura binaria).
+- **Valor retornado:** `None`.
+- **Protocolo en el que se utiliza:** Ambos (TCP y UDP).
+- **Ejemplo breve de uso:**
+  ```python
+  server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+  ```
+- **Indicación de si fue utilizado:** Sí.
+- **Referencia en el código:** `server.py` (Línea 235) para permitir reiniciar el servidor inmediatamente sin esperar el estado `TIME_WAIT`.
 
 ---
 
-### 12. `close()`
-- **Propósito:** Cierra definitivamente el descriptor de archivo del socket y libera todos los recursos del sistema operativo asociados.
-- **Sintaxis:** `sock.close()`
-- **Parámetros:** Ninguno.
-- **Retorno:** `None`.
-- **Protocolo:** Ambos (TCP y UDP).
-- **Ejemplo:** `sock.close()`
-- **Uso en el programa:** Sí. Utilizado en `server.py` (Líneas 85, 298), `client.py` (Línea 302) y `protocol.py`.
+### 12. `settimeout()`
+- **Nombre del método:** `settimeout()`
+- **Propósito o función:** Establece un límite de tiempo máximo para que una operación bloqueante (`accept`, `connect`, `recv`, `send`) se complete antes de lanzar `socket.timeout`.
+- **Sintaxis en Python:** `sock.settimeout(seconds)`
+- **Explicación de sus parámetros principales:**
+  - `seconds`: Número flotante que indica los segundos de espera máxima, o `None` para modo bloqueante infinito.
+- **Valor retornado:** `None`.
+- **Protocolo en el que se utiliza:** Ambos (TCP y UDP).
+- **Ejemplo breve de uso:**
+  ```python
+  sock.settimeout(120.0)
+  ```
+- **Indicación de si fue utilizado:** Sí.
+- **Referencia en el código:** `server.py` (Líneas 248, 261) y `client.py` (Línea 78).
 
 ---
 
-### 13. `gethostbyname()` / `getaddrinfo()`
-- **Propósito:** Resuelve un nombre de host alfanumérico o dominio (ej. `"localhost"`, `"servidor.local"`) a su correspondiente dirección IPv4 en formato estándar de puntos.
-- **Sintaxis:** `ip = socket.gethostbyname(hostname)`
-- **Parámetros:** `hostname`: Cadena de texto con el nombre del host.
-- **Retorno:** Cadena con la dirección IPv4 (ej. `"127.0.0.1"`).
-- **Protocolo:** Ambos (Capa de aplicación / DNS).
-- **Ejemplo:** `ip = socket.gethostbyname("localhost")`
-- **Uso en el programa:** Sí. Utilizado en `client.py` (Línea 69) para resolver el host ingresado.
+### 13. `shutdown()`
+- **Nombre del método:** `shutdown()`
+- **Propósito o función:** Cierra de manera ordenada y selectiva la transmisión, recepción o ambos canales de un socket TCP conectado, transmitiendo los paquetes de finalización (`FIN`).
+- **Sintaxis en Python:** `sock.shutdown(how)`
+- **Explicación de sus parámetros principales:**
+  - `how`: Modo de cierre (`socket.SHUT_RD` para lectura, `socket.SHUT_WR` para escritura, `socket.SHUT_RDWR` para ambos).
+- **Valor retornado:** `None`.
+- **Protocolo en el que se utiliza:** Exclusivo de TCP (`SOCK_STREAM`).
+- **Ejemplo breve de uso:**
+  ```python
+  sock.shutdown(socket.SHUT_RDWR)
+  ```
+- **Indicación de si fue utilizado:** Sí.
+- **Referencia en el código:** `server.py` (Línea 81) y `client.py` (Línea 298).
 
 ---
 
-### 14. Métodos Comparativos UDP: `sendto()` y `recvfrom()`
-- **`sendto(bytes, (ip, port))`:** Envía un datagrama UDP directamente a la dirección de destino sin requerir un handshake previo ni conexión establecida.
-- **`recvfrom(bufsize)`:** Recibe un datagrama UDP y retorna una tupla `(datos, (ip_origen, puerto_origen))`.
-- **Relación con el proyecto:** Aunque Battleship utiliza TCP por confiabilidad, estos métodos representan el equivalente funcional en arquitecturas UDP.
+### 14. `close()`
+- **Nombre del método:** `close()`
+- **Propósito o función:** Destruye y libera el descriptor de archivo del socket en el sistema operativo, cerrando el canal de comunicación.
+- **Sintaxis en Python:** `sock.close()`
+- **Explicación de sus parámetros principales:** No recibe parámetros.
+- **Valor retornado:** `None`.
+- **Protocolo en el que se utiliza:** Ambos (TCP y UDP).
+- **Ejemplo breve de uso:**
+  ```python
+  sock.close()
+  ```
+- **Indicación de si fue utilizado:** Sí.
+- **Referencia en el código:** `server.py` (Líneas 85, 298), `client.py` (Línea 302) y `protocol.py`.
+
+---
+
+### 15. `getaddrinfo()` / `gethostbyname()`
+- **Nombre del método:** `getaddrinfo()` / `gethostbyname()`
+- **Propósito o función:** Realiza la resolución de nombres de dominio (DNS) para convertir nombres de host alfanuméricos (ej. `"localhost"`, `"servidor.local"`) en direcciones IP numéricas válidas para la conexión.
+- **Sintaxis en Python:** `ip = socket.gethostbyname(hostname)` o `info = socket.getaddrinfo(host, port, family, type)`
+- **Explicación de sus parámetros principales:**
+  - `hostname` / `host`: Cadena con el nombre de host o dominio.
+  - `port`: Puerto o nombre de servicio (en `getaddrinfo`).
+- **Valor retornado:** Cadena con la dirección IP (en `gethostbyname`) o lista de tuplas con configuración de socket completa (en `getaddrinfo`).
+- **Protocolo en el que se utiliza:** Ambos (Capa de resolución DNS / Red).
+- **Ejemplo breve de uso:**
+  ```python
+  target_ip = socket.gethostbyname("localhost")
+  ```
+- **Indicación de si fue utilizado:** Sí.
+- **Referencia en el código:** `client.py` (Línea 69) para resolver el host de conexión ingresado por el usuario.
+
 
 ---
 
