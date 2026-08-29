@@ -11,6 +11,17 @@ const FLEET_SPEC = [
     { name: "Destructor",   size: 2, id: "D" }
 ];
 
+const WATER_MISS_SVG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round"><path d="M2 11c3-2 6 2 10 0s7 2 10 0M4 16c3-1.5 5 1.5 8 0s5 1.5 8 0"/></svg>`;
+
+const SHIP_ICONS = {
+    "Portaaviones": `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="10" rx="2"/><line x1="2" y1="12" x2="22" y2="12" stroke-dasharray="2 2"/><polygon points="14 3 19 3 17 7 12 7"/></svg>`,
+    "Acorazado": `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 14 L22 14 L18 19 L6 19 Z"/><circle cx="8" cy="11" r="2"/><circle cx="16" cy="11" r="2"/><line x1="8" y1="9" x2="8" y2="5"/><line x1="16" y1="9" x2="16" y2="5"/></svg>`,
+    "Crucero": `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 14 L21 14 L18 18 L6 18 Z"/><path d="M8 14 L8 9 L16 9 L16 14"/><line x1="12" y1="5" x2="12" y2="9"/></svg>`,
+    "Submarino": `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><ellipse cx="12" cy="13" rx="9" ry="5"/><circle cx="12" cy="6" r="2"/><line x1="12" y1="8" x2="12" y2="10"/><line x1="3" y1="13" x2="1" y2="10"/><line x1="3" y1="13" x2="1" y2="16"/></svg>`,
+    "Destructor": `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 13 L21 13 L17 17 L7 17 Z"/><line x1="12" y1="7" x2="12" y2="13"/><polygon points="12 7 16 9 12 11"/></svg>`
+};
+
+
 const ROWS = ['A','B','C','D','E','F','G','H','I','J'];
 const COLS = ['1','2','3','4','5','6','7','8','9','10'];
 const BOARD_SIZE = 10;
@@ -524,6 +535,7 @@ class BattleMishApp {
         FLEET_SPEC.forEach((spec, idx) => {
             const isPlaced = this.placedShips.some(s => s.name === spec.name);
             const isSelected = this.selectedShipIndex === idx;
+            const iconSvg = SHIP_ICONS[spec.name] || '';
 
             const card = document.createElement('div');
             card.className = `ship-card ${isSelected ? 'selected' : ''} ${isPlaced ? 'placed' : ''}`;
@@ -538,9 +550,14 @@ class BattleMishApp {
             }
 
             card.innerHTML = `
-                <div>
-                    <strong>${spec.name}</strong>
-                    <div style="font-size:0.85rem; color:var(--pencil-gray);">${spec.size} casillas ${isPlaced ? '[OK]' : ''}</div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; background:#e2e8f0; border-radius:4px; color:#1e293b;">
+                        ${iconSvg}
+                    </div>
+                    <div>
+                        <strong>${spec.name} (${spec.id})</strong>
+                        <div style="font-size:0.85rem; color:var(--pencil-gray);">${spec.size} casillas ${isPlaced ? '[OK]' : ''}</div>
+                    </div>
                 </div>
                 <div class="ship-blocks">${blocksHtml}</div>
             `;
@@ -581,7 +598,11 @@ class BattleMishApp {
                 cell.dataset.c = c;
 
                 if (this.myGrid[r][c]) {
-                    cell.classList.add('cell-ship');
+                    const shipName = this.myGrid[r][c];
+                    const spec = FLEET_SPEC.find(s => s.name === shipName);
+                    const shipId = spec ? spec.id : 'S';
+                    cell.classList.add('cell-ship', `cell-ship-${shipId}`);
+                    cell.textContent = shipId;
                 }
 
                 cell.addEventListener('mouseenter', () => this.previewPlacement(r, c));
@@ -592,6 +613,7 @@ class BattleMishApp {
             }
         }
     }
+
 
     getShipCoords(r, c, size, orientation) {
         const coords = [];
@@ -777,9 +799,16 @@ class BattleMishApp {
                 cell.dataset.c = c;
 
                 const val = this.radarGrid[r][c];
-                if (val === 'HIT') cell.classList.add('cell-hit'), cell.textContent = '✕';
-                if (val === 'MISS') cell.classList.add('cell-miss'), cell.textContent = '•';
-                if (val === 'SUNK') cell.classList.add('cell-sunk'), cell.textContent = '✕';
+                if (val === 'HIT') {
+                    cell.classList.add('cell-hit');
+                    cell.textContent = '✕';
+                } else if (val === 'MISS') {
+                    cell.classList.add('cell-miss');
+                    cell.innerHTML = WATER_MISS_SVG;
+                } else if (val === 'SUNK') {
+                    cell.classList.add('cell-sunk');
+                    cell.textContent = '✕';
+                }
 
                 cell.addEventListener('click', () => this.fireShot(r, c));
                 this.radarGridEl.appendChild(cell);
@@ -809,20 +838,25 @@ class BattleMishApp {
                 cell.dataset.r = r;
                 cell.dataset.c = c;
 
-                if (this.myGrid[r][c] && typeof this.myGrid[r][c] === 'string' && !this.myGrid[r][c].startsWith('HIT_')) {
-                    cell.classList.add('cell-ship');
-                } else if (this.myGrid[r][c] && this.myGrid[r][c].startsWith('HIT_')) {
+                const cellData = this.myGrid[r][c];
+                if (cellData && typeof cellData === 'string' && !cellData.startsWith('HIT_') && cellData !== 'MISS') {
+                    const spec = FLEET_SPEC.find(s => s.name === cellData);
+                    const shipId = spec ? spec.id : 'S';
+                    cell.classList.add('cell-ship', `cell-ship-${shipId}`);
+                    cell.textContent = shipId;
+                } else if (cellData && typeof cellData === 'string' && cellData.startsWith('HIT_')) {
                     cell.classList.add('cell-hit');
                     cell.textContent = '✕';
-                } else if (this.myGrid[r][c] === 'MISS') {
+                } else if (cellData === 'MISS') {
                     cell.classList.add('cell-miss');
-                    cell.textContent = '•';
+                    cell.innerHTML = WATER_MISS_SVG;
                 }
 
                 this.ownBattleGridEl.appendChild(cell);
             }
         }
     }
+
 
     fireShot(r, c) {
         if (!this.isMyTurn) {

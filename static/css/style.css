@@ -691,39 +691,52 @@ body {
     border: 2px solid #e11d48 !important;
 }
 
+/* Barcos: Grafito y Carbón Naval (Contraste total con el agua) */
 .grid-cell.cell-ship {
-    background: #bfdbfe !important;
-    border: 2px solid #1d4ed8 !important;
-    position: relative;
+    background: #334155 !important;
+    border: 2px solid #0f172a !important;
+    color: #f8fafc !important;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Sombreado a lápiz para barcos */
-.grid-cell.cell-ship::after {
-    content: '';
-    position: absolute;
-    width: 60%;
-    height: 60%;
-    background: #3b82f6;
-    border-radius: 2px;
+.grid-cell.cell-ship-P { background: #1e293b !important; }
+.grid-cell.cell-ship-A { background: #334155 !important; }
+.grid-cell.cell-ship-C { background: #475569 !important; }
+.grid-cell.cell-ship-S { background: #1e3a5f !important; }
+.grid-cell.cell-ship-D { background: #374151 !important; }
+
+/* Disparo al Agua: Ondas sutiles a lápiz sobre papel claro (sin azul confuso) */
+.grid-cell.cell-miss {
+    background: #f8fafc !important;
+    border: 1px dashed #cbd5e1 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Disparos con Lápiz Rojo y Azul */
+.grid-cell.cell-miss svg {
+    stroke: #64748b;
+}
+
+/* Impacto / Barco Tocado: Marcador Rojo Brillante */
 .grid-cell.cell-hit {
     background: #fee2e2 !important;
+    border: 2px solid #dc2626 !important;
     color: var(--ink-red) !important;
     font-weight: 900;
-}
-
-.grid-cell.cell-miss {
-    background: #f1f5f9 !important;
-    color: #3b82f6 !important;
     font-size: 1.8rem;
 }
 
 .grid-cell.cell-sunk {
     background: #fca5a5 !important;
+    border: 2px solid #991b1b !important;
     color: var(--ink-red-dark) !important;
+    font-weight: 900;
 }
+
 
 /* SECCIÓN 4: ARENA DE BATALLA */
 .battle-hud {
@@ -999,9 +1012,10 @@ body {
 
 /* Responsividad */
 @media (max-width: 850px) {
+    :root { --cell-size: 30px; }
     .placement-layout { grid-template-columns: 1fr; }
     .battle-arenas { grid-template-columns: 1fr; }
-    --cell-size: 30px;
     .navbar { padding: 10px 16px; }
     .hero-title { font-size: 2.2rem; }
 }
+
