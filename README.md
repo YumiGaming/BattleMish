@@ -1,99 +1,109 @@
-# 🚢 BattleMish — Plataforma Multijugador de Batalla Naval (Web & Consola)
+# 🚢 BattleMish — Aplicación Multijugador en Red basada en Sockets TCP
 
-Plataforma multijugador de **Batalla Naval (Battleship)** desarrollada en **Python 3**, que cuenta con dos modalidades completas:
-1. **Versión Web Interactiva:** Interfaz en navegador (*Dark Glassmorphism*), sistema de cuentas de usuario, historial de partidas en SQLite, creación de salas por ID / código compartible, y combate en tiempo real con WebSockets y efectos de sonido dinámicos.
-2. **Versión de Consola TCP:** Implementación original para la cátedra de redes, con sockets TCP puros (`socket.AF_INET`, `socket.SOCK_STREAM`), enmarcado de flujo (*Message Framing*) e informe académico formal.
-
----
-
-## 🌐 Enlace Público de la Versión Web
-
-> [!TIP]
-> Puedes acceder a la versión web desplegada desde tu computador a través del túnel público seguro:
-> **URL Pública:** `https://arguments-varieties-belkin-jump.trycloudflare.com`
-> *(Accesible desde cualquier navegador, computadora o celular sin necesidad de configurar puertos)*
+**Universidad de La Frontera**  
+**Asignatura:** ICC717-1 Taller de Redes  
+**Integrantes:** José Rivera Bustos · Benjamin Fonseca · Ivan Carreño  
+**Docente:** Flavio Alexis Rojas Acuña  
+**Fecha de Entrega:** 31 de Agosto de 2026  
 
 ---
 
-## 📋 Requisitos del Sistema
+## 📋 1. Requisitos de Instalación y Entorno
 
-- **Lenguaje:** Python 3.8 o superior (compatible con Python 3.8 - 3.13).
-- **Backend Web:** `fastapi`, `uvicorn`, `websockets`, `pyjwt`, `sqlite3`.
-- **Frontend Web:** Vanilla HTML5, CSS3 moderno (*Glassmorphism*), JavaScript ES6+ y Web Audio API.
+- **Lenguaje de Programación:** Python 3 (compatible con Python 3.8 a 3.13).
+- **Entorno de Ejecución:** Funciona en cualquier sistema operativo (Windows, Linux, macOS).
+- **Bibliotecas Necesarias (Cero dependencias externas para la versión académica):**
+  La aplicación de consola basada en Sockets TCP utiliza exclusivamente la **librería estándar de Python**:
+  - `socket`: Creación y manipulación de llamadas a la API de sockets a bajo nivel.
+  - `struct`: Empaquetado binario del prefijo de longitud de red (`!I` Big-Endian).
+  - `threading`: Gestión concurrente de clientes y salas de juego (`GameRoom`).
+  - `json`: Serialización estructurada de payloads de aplicación.
+  - `argparse`: Lectura de parámetros por línea de comandos (IP y Puerto).
+  - `unittest`: Suite de pruebas automatizadas (`test_game.py`).
 
----
-
-## 📂 Estructura del Proyecto
-
-```text
-BattleMish/
-├── web_server.py              # Servidor Web FastAPI: REST APIs y Hub WebSocket de salas
-├── database.py                # Base de datos SQLite: Usuarios, estadísticas e historial
-├── game_logic.py              # Reglas de Battleship, flota, tableros y validaciones
-├── static/                    # Frontend Web
-│   ├── index.html             # Single Page Application (Lobby, Salas, Posicionamiento, Batalla)
-│   ├── css/
-│   │   └── style.css          # Estilos Cyberpunk Naval, Dark Glassmorphism y animaciones
-│   └── js/
-│       ├── app.js             # Lógica SPA, WebSockets y sincronización de turnos
-│       └── audio.js           # Sintetizador de efectos sonoros náuticos (Web Audio API)
-├── server.py                  # Servidor de consola TCP original (Sockets puros)
-├── client.py                  # Cliente de consola original
-├── protocol.py                # Capa de red con Message Framing sobre TCP
-├── test_game.py               # Suite de pruebas automatizadas
-├── INFORME_TALLER_REDES.md    # Informe académico formal de 10 secciones
-└── README.md                  # Este manual de usuario
-```
+*(Para la versión web opcional/complementaria se incluye `requirements.txt` con `fastapi`, `uvicorn`, `websockets` y `pyjwt`).*
 
 ---
 
-## 🚀 Cómo Ejecutar la Versión Web
+## ⚙️ 2. Dirección IP y Puertos Utilizados
 
-### 1. Iniciar el Servidor Web Local
+| Componente | Dirección IP por Defecto | Puerto por Defecto | Parámetros de Consola |
+| :--- | :--- | :---: | :--- |
+| **Servidor (`server.py`)** | `0.0.0.0` (todas las interfaces) o `127.0.0.1` | `8888` (configurable) | `--host <IP> --port <PUERTO>` |
+| **Cliente (`client.py`)** | `127.0.0.1` (localhost) o IP del servidor | `8888` | `--host <IP> --port <PUERTO> --name <NOMBRE>` |
+
+---
+
+## 🚀 3. Comandos para Ejecutar el Programa
+
+Abre **tres terminales** en la carpeta del proyecto:
+
+### Paso 1: Iniciar el Servidor
 ```bash
-python -m uvicorn web_server:app --host 0.0.0.0 --port 8000
+python server.py --host 127.0.0.1 --port 8888
 ```
-La aplicación estará disponible localmente en `http://127.0.0.1:8000`.
+*El servidor creará el socket TCP (`AF_INET`, `SOCK_STREAM`), activará `SO_REUSEADDR`, enlazará el puerto con `bind()`, entrará en modo de escucha con `listen()` y quedará a la espera de conexiones con `accept()`.*
 
-### 2. Generar o Iniciar el Enlace Público (Cloudflare Tunnel)
+### Paso 2: Iniciar el Cliente 1 (Jugador 1)
 ```bash
-cloudflared tunnel --url http://127.0.0.1:8000
-```
-Esto generará una URL pública segura `https://*.trycloudflare.com` que puedes compartir con cualquier persona para que juegue contigo.
-
----
-
-## 🎮 Características de la Versión Web
-
-1. **Cuentas de Usuario y Seguridad:** Registro e inicio de sesión con contraseñas encriptadas mediante SHA-256 + Salt y tokens de sesión JWT.
-2. **Historial de Partidas y Récords:** Registro persistente de victorias, derrotas, porcentaje de win rate, turnos y duración de cada batalla.
-3. **Salas por ID:** Crea salas privadas o públicas con códigos de 6 caracteres (ej. `WAR-7291`) o comparte un enlace directo `https://.../?room=WAR-7291`.
-4. **Despliegue Táctico:** Colocación interactiva con rotación de barcos (tecla `R`) o despliegue aleatorio instantáneo.
-5. **Radar en Tiempo Real:** Visualización táctica lado a lado de tu flota y el radar enemigo, con avisos de impacto, agua y hundimiento.
-6. **Efectos de Sonido:** Sonar submarino, torpedos, explosiones y fanfarria de victoria generados con la API Web Audio del navegador.
-
----
-
-## 💻 Cómo Ejecutar la Versión de Consola TCP (Académica)
-
-### Servidor de Consola:
-```bash
-python server.py --host 0.0.0.0 --port 8888
-```
-
-### Clientes de Consola:
-```bash
-# Jugador 1:
 python client.py --host 127.0.0.1 --port 8888 --name "Almirante_1"
+```
 
-# Jugador 2:
+### Paso 3: Iniciar el Cliente 2 (Jugador 2)
+```bash
 python client.py --host 127.0.0.1 --port 8888 --name "Almirante_2"
 ```
 
 ---
 
-## 🧪 Pruebas Automatizadas
+## 🎮 4. Ejemplo Básico de Ejecución
+
+1. **Emparejamiento:** Al conectarse el segundo cliente, el servidor crea inmediatamente una sala independiente `GameRoom` (hilo dedicado) y notifica a ambos con `MSG_START_PLACEMENT`.
+2. **Colocación de Flota:** Cada jugador puede elegir:
+   - Opción `1`: Colocación manual de los 5 barcos (Portaaviones, Acorazado, Crucero, Submarino, Destructor) indicando coordenada y orientación (ej. `A1 H`).
+   - Opción `2`: Colocación automática aleatoria.
+   - *El servidor valida límites y ausencia de solapamientos con `_validate_and_build_board()`.*
+3. **Fase de Batalla:**
+   - El servidor otorga el turno inicial e indica `¡ES TU TURNO DE ATACAR!`.
+   - El jugador atacante ingresa una coordenada (ej. `B4`).
+   - El servidor calcula imparcialmente el resultado (`AGUA`, `TOCADO` o `HUNDIDO`) y emite `ATTACK_RESULT` actualizando ambos radares en tiempo real.
+4. **Fin de Partida y Cierre Limpio:**
+   - Al hundirse los 5 barcos de un jugador, el servidor declara ganador con `MSG_GAME_OVER`.
+   - Ambos extremos ejecutan `shutdown(socket.SHUT_RDWR)` y `close()`, liberando inmediatamente los descriptores del sistema operativo.
+
+---
+
+## 🧪 5. Ejecución de Pruebas Automatizadas
+
+Para validar el protocolo, las reglas del juego, una partida completa y la tolerancia a desconexiones abruptas, ejecuta:
 
 ```bash
 python test_game.py
+```
+*Salida esperada:*
+```text
+....
+------------------------------------------------------
+Ran 4 tests in 0.432s
+
+OK
+```
+
+---
+
+## 📂 6. Estructura de Archivos del Proyecto
+
+```text
+BattleMish/
+├── server.py                  # Servidor TCP multijugador con sockets puros y multithreading
+├── client.py                  # Cliente interactivo de consola con UI en colores ANSI
+├── protocol.py                # Capa de red con Message Framing (4 bytes Big-Endian + JSON)
+├── game_logic.py              # Reglas de Battleship, flota de 5 barcos y tableros 10x10
+├── test_game.py               # Suite de 4 pruebas automatizadas end-to-end
+├── INFORME_TALLER_REDES.pdf   # Informe técnico académico completo en PDF
+├── PRESENTACION_BATTLEMISH.pdf# Diapositivas para la defensa oral del proyecto
+├── README.md                  # Manual de usuario e instrucciones de ejecución
+├── web_server.py              # (Opcional) Servidor Web FastAPI con WebSockets
+├── database.py                # (Opcional) Base de datos SQLite para historial web
+└── static/                    # (Opcional) Frontend web en cuaderno escolar
 ```
