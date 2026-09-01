@@ -246,8 +246,21 @@
             </div>
         </section>
 
+        <!-- Alerta Flotante de Reconexión (Countdown 30s) -->
+        <div id="reconnect-alert" class="reconnect-alert hidden">
+            <div class="alert-content">
+                <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span id="reconnect-text">El oponente se ha desconectado. Esperando reconexión...</span>
+                <div class="countdown-badge" id="reconnect-timer-badge">30s</div>
+            </div>
+        </div>
+
         <!-- SECCIÓN 4: ARENA DE BATALLA (DOBLE HOJA) -->
         <section id="view-battle" class="view-section hidden">
+
             
             <!-- Barra Superior de Estado -->
             <div class="paper-tape battle-hud">
