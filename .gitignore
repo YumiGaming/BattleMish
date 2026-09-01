@@ -38,3 +38,8 @@ ENV/
 *.sqlite3
 battlemish.db
 
+# Academic / Reports
+*.pdf
+INFORME_*
+PRESENTACION_*
+
