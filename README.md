@@ -5,7 +5,7 @@
 
 ---
 
-## 📖 Descripción General
+## 1. Descripción General
 
 **BattleMish** es una recreación moderna del clásico juego de estrategia naval con estética de libreta de apuntes (*notebook paper doodle*). El proyecto ofrece una experiencia multijugador completa en tiempo real, permitiendo a los jugadores crear salas, posicionar su flota de 5 buques reglamentarios, batallar mediante disparos navales por turnos y llevar registro de sus estadísticas y victorias.
 
@@ -15,20 +15,20 @@ El proyecto cuenta con dos modalidades:
 
 ---
 
-## ✨ Características Principales
+## 2. Características Principales
 
-- 🎮 **Multijugador en Tiempo Real:** Comunicación bidireccional de baja latencia mediante WebSockets.
-- 📝 **Estética Cuaderno Cuadriculado:** Interfaz estilizada tipo hoja de libreta escolar con márgenes, tipografías estilo manuscrito y trazos doodle en tinta azul y roja.
-- 🚢 **Flota de Combate Completa:** 5 navíos reglamentarios (Portaaviones: 5 casillas, Acorazado: 4, Crucero: 3, Submarino: 3, Destructor: 2).
-- 🧭 **Despliegue Estratégico:** Colocación manual interactiva con rotación (horizontal/vertical) o generación aleatoria automática de flota.
-- 🔊 **Motor de Audio Sintetizado:** Efectos de sonido dinámicos (disparos, impactos, agua, victoria y derrota) generados en tiempo real con Web Audio API sin necesidad de archivos de audio externos.
-- 🔐 **Cuentas y Estadísticas:** Registro y login de usuarios con contraseñas seguras (PBKDF2-HMAC-SHA256), tokens JWT, historial de partidas y porcentaje de victorias.
-- 🌐 **Salas Públicas y Privadas:** Creación y unión a salas mediante identificadores únicos (`WAR-XXXX`).
-- 🎨 **Favicon e Identidad Visual:** Icono temático del barco de guerra en formato SVG y multi-resolución ICO adaptado a temas claros y oscuros.
+- **Multijugador en Tiempo Real:** Comunicación bidireccional de baja latencia mediante WebSockets.
+- **Estética Cuaderno Cuadriculado:** Interfaz estilizada tipo hoja de libreta escolar con márgenes, tipografías estilo manuscrito y trazos doodle en tinta azul y roja.
+- **Flota de Combate Completa:** 5 navíos reglamentarios (Portaaviones: 5 casillas, Acorazado: 4, Crucero: 3, Submarino: 3, Destructor: 2).
+- **Despliegue Estratégico:** Colocación manual interactiva con rotación (horizontal/vertical) o generación aleatoria automática de flota.
+- **Motor de Audio Sintetizado:** Efectos de sonido dinámicos (disparos, impactos, agua, victoria y derrota) generados en tiempo real con Web Audio API sin necesidad de archivos de audio externos.
+- **Cuentas y Estadísticas:** Registro y login de usuarios con contraseñas seguras (PBKDF2-HMAC-SHA256), tokens JWT, historial de partidas y porcentaje de victorias.
+- **Salas Públicas y Privadas:** Creación y unión a salas mediante identificadores únicos (`WAR-XXXX`).
+- **Favicon e Identidad Visual:** Icono temático del barco de guerra en formato SVG y multi-resolución ICO adaptado a temas claros y oscuros.
 
 ---
 
-## 🛠️ Tecnologías y Requisitos
+## 3. Tecnologías y Requisitos
 
 ### Requisitos del Sistema
 - **Python:** 3.8 o superior (compatible con Python 3.13)
@@ -41,9 +41,9 @@ pip install fastapi uvicorn websockets pyjwt
 
 ---
 
-## 🚀 Guía de Ejecución
+## 4. Guía de Ejecución
 
-### 1. Iniciar la Versión Web (Recomendado)
+### 4.1 Iniciar la Versión Web (Recomendado)
 
 Inicia el servidor web FastAPI con Uvicorn:
 
@@ -60,7 +60,7 @@ http://localhost:8000
 
 ---
 
-### 2. Iniciar la Versión de Consola TCP
+### 4.2 Iniciar la Versión de Consola TCP
 
 Si deseas ejecutar la versión de terminal por sockets TCP nativos:
 
@@ -71,17 +71,17 @@ python server.py --host 127.0.0.1 --port 8888
 
 **Terminal 2 — Jugador 1:**
 ```bash
-python client.py --host 127.0.0.1 --port 8888 --name "Capitán_1"
+python client.py --host 127.0.0.1 --port 8888 --name "Capitan_1"
 ```
 
 **Terminal 3 — Jugador 2:**
 ```bash
-python client.py --host 127.0.0.1 --port 8888 --name "Capitán_2"
+python client.py --host 127.0.0.1 --port 8888 --name "Capitan_2"
 ```
 
 ---
 
-## 🧪 Pruebas Automatizadas
+## 5. Pruebas Automatizadas
 
 El proyecto incluye una suite completa de pruebas unitarias y de integración end-to-end:
 
@@ -91,7 +91,7 @@ python test_game.py
 
 ---
 
-## 📂 Estructura del Repositorio
+## 6. Estructura del Repositorio
 
 ```text
 BattleMish/
@@ -117,6 +117,6 @@ BattleMish/
 
 ---
 
-## 👤 Autor y Créditos
+## 7. Autor y Créditos
 
 - **Desarrollador:** Yumi
