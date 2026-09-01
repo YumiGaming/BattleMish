@@ -1,7 +1,7 @@
 /**
- * audio.js - Sintetizador de Sonidos Náuticos con Web Audio API
- * Genera todos los efectos sonoros dinámicamente sin requerir archivos externos.
- */
+* audio.js - Sintetizador de Sonidos Náuticos con Web Audio API
+* Genera todos los efectos sonoros dinámicamente sin requerir archivos externos.
+*/
 
 class SoundEngine {
     constructor() {

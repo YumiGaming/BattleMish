@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BattleMish — Batalla Naval en Hoja de Cuaderno</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@600;700&family=Patrick+Hand&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -239,8 +246,21 @@
             </div>
         </section>
 
+        <!-- Alerta Flotante de Reconexión (Countdown 30s) -->
+        <div id="reconnect-alert" class="reconnect-alert hidden">
+            <div class="alert-content">
+                <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span id="reconnect-text">El oponente se ha desconectado. Esperando reconexión...</span>
+                <div class="countdown-badge" id="reconnect-timer-badge">30s</div>
+            </div>
+        </div>
+
         <!-- SECCIÓN 4: ARENA DE BATALLA (DOBLE HOJA) -->
         <section id="view-battle" class="view-section hidden">
+
             
             <!-- Barra Superior de Estado -->
             <div class="paper-tape battle-hud">

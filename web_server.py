@@ -257,65 +257,156 @@ async def websocket_battle_endpoint(
             "start_time": 0,
             "player1": None,
             "player2": None,
+            "player1_name": None,
+            "player2_name": None,
             "board1": None,
             "board2": None,
             "current_turn": 1,
             "turn_count": 0,
-            "lock": asyncio.Lock()
+            "lock": asyncio.Lock(),
+            "disconnect_task": None,
+            "disconnected_player": None
         }
 
     room = active_rooms[clean_room_id]
+    is_reconnect = False
 
     async with room["lock"]:
-        # Asignar posición de jugador en la sala
-        if room["player1"] is None:
-            player_num = 1
-            session = WebPlayerSession(ws, username, 1)
-            room["player1"] = session
-        elif room["player2"] is None:
-            player_num = 2
-            session = WebPlayerSession(ws, username, 2)
-            room["player2"] = session
+        if room["status"] in ("PLACEMENT", "BATTLE"):
+            # Verificar si es una reconexión de jugador existente
+            if room["player1"] is None and (room.get("player1_name") == username or room.get("player2_name") != username):
+                player_num = 1
+                session = WebPlayerSession(ws, username, 1)
+                session.board = room.get("board1")
+                session.ready = True if session.board else False
+                room["player1"] = session
+                room["player1_name"] = username
+                is_reconnect = True
+            elif room["player2"] is None and (room.get("player2_name") == username or room.get("player1_name") != username):
+                player_num = 2
+                session = WebPlayerSession(ws, username, 2)
+                session.board = room.get("board2")
+                session.ready = True if session.board else False
+                room["player2"] = session
+                room["player2_name"] = username
+                is_reconnect = True
+            else:
+                await ws.send_json({"type": "ERROR", "message": "La partida ya está en curso y la sala se encuentra llena."})
+                await ws.close()
+                return
         else:
-            await ws.send_json({"type": "ERROR", "message": "La sala ya se encuentra llena."})
-            await ws.close()
-            return
+            # Estado WAITING normal
+            if room["player1"] is None:
+                player_num = 1
+                session = WebPlayerSession(ws, username, 1)
+                room["player1"] = session
+                room["player1_name"] = username
+            elif room["player2"] is None:
+                player_num = 2
+                session = WebPlayerSession(ws, username, 2)
+                room["player2"] = session
+                room["player2_name"] = username
+            else:
+                await ws.send_json({"type": "ERROR", "message": "La sala ya se encuentra llena."})
+                await ws.close()
+                return
 
-    # Notificar bienvenida y estado de sala
-    await session.send_json({
-        "type": "JOIN_SUCCESS",
-        "room_id": clean_room_id,
-        "player_num": player_num,
-        "username": username
-    })
+    if is_reconnect:
+        # Cancelar tarea de cuenta regresiva de 30 segundos
+        if room.get("disconnect_task") and not room["disconnect_task"].done():
+            room["disconnect_task"].cancel()
+        room["disconnected_player"] = None
 
-    # Si ambos jugadores ya están conectados, iniciar fase de posicionamiento
-    if room["player1"] and room["player2"] and room["status"] == "WAITING":
-        room["status"] = "PLACEMENT"
-        room["start_time"] = time.time()
-        
-        start_payload_p1 = {
-            "type": "START_PLACEMENT",
-            "room_id": clean_room_id,
-            "opponent_name": room["player2"].username,
-            "fleet_spec": FLEET_SPEC,
-            "board_size": BOARD_SIZE
-        }
-        start_payload_p2 = {
-            "type": "START_PLACEMENT",
-            "room_id": clean_room_id,
-            "opponent_name": room["player1"].username,
-            "fleet_spec": FLEET_SPEC,
-            "board_size": BOARD_SIZE
-        }
-        await room["player1"].send_json(start_payload_p1)
-        await room["player2"].send_json(start_payload_p2)
-    else:
-        # Notificar al primer jugador que espere oponente
+        other_session = room["player2"] if player_num == 1 else room["player1"]
+        other_name = room.get("player2_name") if player_num == 1 else room.get("player1_name")
+
+        # Notificar al oponente que volvió
+        if other_session:
+            await other_session.send_json({
+                "type": "OPPONENT_RECONNECTED",
+                "username": username,
+                "message": f"¡{username} se ha reconectado! La batalla continúa."
+            })
+
+        my_board = room.get("board1") if player_num == 1 else room.get("board2")
+        opp_board = room.get("board2") if player_num == 1 else room.get("board1")
+
+        my_grid_cells = []
+        radar_grid_cells = []
+        if my_board and opp_board:
+            for r in range(BOARD_SIZE):
+                for c in range(BOARD_SIZE):
+                    if (r, c) in my_board.shots_received:
+                        hit_ship = next((s for s in my_board.ships if (r, c) in s.coords), None)
+                        if hit_ship:
+                            my_grid_cells.append({"r": r, "c": c, "val": f"HIT_{hit_ship.name}"})
+                        else:
+                            my_grid_cells.append({"r": r, "c": c, "val": "MISS"})
+                    else:
+                        ship = next((s for s in my_board.ships if (r, c) in s.coords), None)
+                        if ship:
+                            my_grid_cells.append({"r": r, "c": c, "val": ship.name})
+
+                    if (r, c) in opp_board.shots_received:
+                        hit_ship = next((s for s in opp_board.ships if (r, c) in s.coords), None)
+                        if hit_ship:
+                            if hit_ship.is_sunk():
+                                radar_grid_cells.append({"r": r, "c": c, "val": "SUNK"})
+                            else:
+                                radar_grid_cells.append({"r": r, "c": c, "val": "HIT"})
+                        else:
+                            radar_grid_cells.append({"r": r, "c": c, "val": "MISS"})
+
         await session.send_json({
-            "type": "WAITING_OPPONENT",
-            "message": f"Esperando a que otro jugador se una a la sala {clean_room_id}..."
+            "type": "RECONNECT_SUCCESS",
+            "room_id": clean_room_id,
+            "player_num": player_num,
+            "username": username,
+            "opponent_name": other_name or "Oponente",
+            "status": room["status"],
+            "your_turn": (room["current_turn"] == player_num),
+            "turn_count": room["turn_count"],
+            "my_grid_cells": my_grid_cells,
+            "radar_grid_cells": radar_grid_cells,
+            "my_hp": my_board.ships_remaining() if my_board else 5,
+            "opp_hp": opp_board.ships_remaining() if opp_board else 5
         })
+
+    else:
+        # Notificar bienvenida normal
+        await session.send_json({
+            "type": "JOIN_SUCCESS",
+            "room_id": clean_room_id,
+            "player_num": player_num,
+            "username": username
+        })
+
+        # Si ambos jugadores ya están conectados, iniciar fase de posicionamiento
+        if room["player1"] and room["player2"] and room["status"] == "WAITING":
+            room["status"] = "PLACEMENT"
+            room["start_time"] = time.time()
+            
+            start_payload_p1 = {
+                "type": "START_PLACEMENT",
+                "room_id": clean_room_id,
+                "opponent_name": room["player2"].username,
+                "fleet_spec": FLEET_SPEC,
+                "board_size": BOARD_SIZE
+            }
+            start_payload_p2 = {
+                "type": "START_PLACEMENT",
+                "room_id": clean_room_id,
+                "opponent_name": room["player1"].username,
+                "fleet_spec": FLEET_SPEC,
+                "board_size": BOARD_SIZE
+            }
+            await room["player1"].send_json(start_payload_p1)
+            await room["player2"].send_json(start_payload_p2)
+        else:
+            await session.send_json({
+                "type": "WAITING_OPPONENT",
+                "message": f"Esperando a que otro jugador se una a la sala {clean_room_id}..."
+            })
 
     try:
         while True:
@@ -349,6 +440,10 @@ async def websocket_battle_endpoint(
                     })
                 else:
                     session.board = board
+                    if player_num == 1:
+                        room["board1"] = board
+                    else:
+                        room["board2"] = board
                     session.ready = True
                     await session.send_json({
                         "type": "PLACEMENT_ACK",
@@ -395,11 +490,12 @@ async def websocket_battle_endpoint(
                     await session.send_json({"type": "ERROR", "message": f"Coordenada inválida: {coord_str}"})
                     continue
                 
+                defender_board = room.get("board2") if player_num == 1 else room.get("board1")
                 defender_session = room["player2"] if player_num == 1 else room["player1"]
-                if not defender_session or not defender_session.board:
+                if not defender_board:
                     continue
                 
-                result, sunk_ship = defender_session.board.receive_attack(coord_tuple)
+                result, sunk_ship = defender_board.receive_attack(coord_tuple)
                 if result == "ALREADY_SHOT":
                     await session.send_json({"type": "ERROR", "message": f"Ya has disparado a {coord_str}."})
                     continue
@@ -414,23 +510,22 @@ async def websocket_battle_endpoint(
                     "coord": formatted_coord,
                     "result": result,  # "AGUA", "TOCADO", "HUNDIDO"
                     "sunk_ship": sunk_ship,
-                    "defender_ships_remaining": defender_session.board.ships_remaining()
+                    "defender_ships_remaining": defender_board.ships_remaining()
                 }
                 
-                await room["player1"].send_json(attack_payload)
-                await room["player2"].send_json(attack_payload)
+                if room["player1"]: await room["player1"].send_json(attack_payload)
+                if room["player2"]: await room["player2"].send_json(attack_payload)
                 
                 # Verificar victoria
-                if defender_session.board.all_ships_sunk():
+                if defender_board.all_ships_sunk():
                     room["status"] = "FINISHED"
-                    duration = time.time() - room["start_time"]
+                    duration = time.time() - room.get("start_time", time.time())
                     
-                    # Registrar partida en base de datos
                     try:
                         database.record_match_result(
                             room_id=clean_room_id,
-                            player1_name=room["player1"].username,
-                            player2_name=room["player2"].username,
+                            player1_name=room.get("player1_name", "P1"),
+                            player2_name=room.get("player2_name", "P2"),
                             winner_name=username,
                             turns=room["turn_count"],
                             duration_seconds=duration,
@@ -439,59 +534,100 @@ async def websocket_battle_endpoint(
                     except Exception as e:
                         print(f"Error guardando partida en BD: {e}")
                     
+                    opp_name = room.get("player2_name") if player_num == 1 else room.get("player1_name")
                     game_over_payload = {
                         "type": "GAME_OVER",
                         "winner": username,
-                        "loser": defender_session.username,
+                        "loser": opp_name or "Oponente",
                         "turns": room["turn_count"],
                         "duration_seconds": round(duration, 1),
-                        "reason": f"¡{username} ha destruido todos los barcos de {defender_session.username}!"
+                        "reason": f"¡{username} ha destruido todos los barcos enemigos!"
                     }
-                    await room["player1"].send_json(game_over_payload)
-                    await room["player2"].send_json(game_over_payload)
+                    if room["player1"]: await room["player1"].send_json(game_over_payload)
+                    if room["player2"]: await room["player2"].send_json(game_over_payload)
                 else:
                     # Cambiar de turno
                     room["current_turn"] = 2 if player_num == 1 else 1
                     next_player = room["player2"] if room["current_turn"] == 2 else room["player1"]
                     waiting_player = room["player1"] if room["current_turn"] == 2 else room["player2"]
                     
-                    await next_player.send_json({"type": "YOUR_TURN"})
-                    await waiting_player.send_json({"type": "WAIT_TURN", "current_player": next_player.username})
+                    if next_player:
+                        await next_player.send_json({"type": "YOUR_TURN"})
+                    if waiting_player:
+                        next_name = room.get("player2_name") if room["current_turn"] == 2 else room.get("player1_name")
+                        await waiting_player.send_json({"type": "WAIT_TURN", "current_player": next_name or "Oponente"})
 
     except WebSocketDisconnect:
-        # Manejar desconexión
+        # Manejar desconexión con cuenta regresiva de 30 segundos
         other_session = room["player2"] if player_num == 1 else room["player1"]
         if player_num == 1:
             room["player1"] = None
         else:
             room["player2"] = None
-        
-        # Si la sala estaba esperando rival y el host se va, o si ambos se fueron, limpiar la sala inmediatamente
-        if (room["status"] == "WAITING" and room["player1"] is None) or (room["player1"] is None and room["player2"] is None):
-            active_rooms.pop(clean_room_id, None)
 
-        if other_session and room["status"] in ("PLACEMENT", "BATTLE"):
-            room["status"] = "FINISHED"
-            try:
-                database.record_match_result(
-                    room_id=clean_room_id,
-                    player1_name=username,
-                    player2_name=other_session.username,
-                    winner_name=other_session.username,
-                    turns=room["turn_count"],
-                    duration_seconds=time.time() - room.get("start_time", time.time()),
-                    reason="Victoria por abandono / desconexión del oponente"
-                )
-            except Exception:
-                pass
-            
-            await other_session.send_json({
-                "type": "GAME_OVER",
-                "winner": other_session.username,
-                "loser": username,
-                "reason": f"El oponente ({username}) se ha desconectado de la partida."
-            })
-            active_rooms.pop(clean_room_id, None)
+        if room["status"] == "WAITING":
+            if room["player1"] is None and room["player2"] is None:
+                active_rooms.pop(clean_room_id, None)
+        elif room["status"] in ("PLACEMENT", "BATTLE"):
+            if other_session:
+                room["disconnected_player"] = player_num
+
+                async def countdown_disconnect_task():
+                    try:
+                        for remaining_sec in range(30, 0, -1):
+                            if clean_room_id not in active_rooms:
+                                return
+                            current_room = active_rooms[clean_room_id]
+                            # Si el jugador se reconectó durante el countdown, salir limpiamente
+                            if (player_num == 1 and current_room.get("player1") is not None) or (player_num == 2 and current_room.get("player2") is not None):
+                                return
+
+                            target_other = current_room.get("player2") if player_num == 1 else current_room.get("player1")
+                            if target_other:
+                                await target_other.send_json({
+                                    "type": "OPPONENT_DISCONNECTED",
+                                    "username": username,
+                                    "seconds_left": remaining_sec,
+                                    "message": f"El oponente ({username}) se ha desconectado. Esperando reconexión ({remaining_sec}s)..."
+                                })
+                            await asyncio.sleep(1)
+
+                        # Si los 30s se agotaron sin reconexión
+                        if clean_room_id in active_rooms:
+                            final_room = active_rooms[clean_room_id]
+                            if (player_num == 1 and final_room.get("player1") is None) or (player_num == 2 and final_room.get("player2") is None):
+                                final_room["status"] = "FINISHED"
+                                active_other = final_room.get("player2") if player_num == 1 else final_room.get("player1")
+                                winner_name = active_other.username if active_other else "Oponente"
+
+                                try:
+                                    database.record_match_result(
+                                        room_id=clean_room_id,
+                                        player1_name=final_room.get("player1_name", "P1"),
+                                        player2_name=final_room.get("player2_name", "P2"),
+                                        winner_name=winner_name,
+                                        turns=final_room.get("turn_count", 0),
+                                        duration_seconds=time.time() - final_room.get("start_time", time.time()),
+                                        reason=f"Victoria por abandono (tiempo de reconexión de 30s agotado para {username})"
+                                    )
+                                except Exception as e:
+                                    print(f"Error registrando partida: {e}")
+
+                                if active_other:
+                                    await active_other.send_json({
+                                        "type": "GAME_OVER",
+                                        "winner": winner_name,
+                                        "loser": username,
+                                        "reason": f"El oponente ({username}) no se reconectó a tiempo (30s agotados)."
+                                    })
+                                active_rooms.pop(clean_room_id, None)
+                    except asyncio.CancelledError:
+                        pass
+
+                room["disconnect_task"] = asyncio.create_task(countdown_disconnect_task())
+            else:
+                active_rooms.pop(clean_room_id, None)
+
 
 
 
@@ -520,6 +656,15 @@ def validate_web_fleet(ships_data: List[dict]) -> Optional[Board]:
             return None
         
     return board
+
+
+# Endpoint explícito para favicon.ico
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    favicon_path = os.path.join(STATIC_DIR, "favicon.ico")
+    if os.path.exists(favicon_path):
+        return FileResponse(favicon_path, media_type="image/x-icon")
+    raise HTTPException(status_code=404, detail="Favicon no encontrado")
 
 
 # Montar archivos estáticos

@@ -488,13 +488,86 @@ class BattleMishApp {
         else if (mtype === 'ATTACK_RESULT') {
             this.handleAttackResult(msg);
         }
+        else if (mtype === 'OPPONENT_DISCONNECTED') {
+            const alertEl = document.getElementById('reconnect-alert');
+            const textEl = document.getElementById('reconnect-text');
+            const badgeEl = document.getElementById('reconnect-timer-badge');
+            
+            alertEl.className = 'reconnect-alert';
+            textEl.textContent = `El oponente (${msg.username}) se desconectó. Esperando reconexión:`;
+            badgeEl.textContent = `${msg.seconds_left}s`;
+            alertEl.classList.remove('hidden');
+            
+            if (msg.seconds_left === 30) {
+                this.addCombatLog(`ALERTA: ${msg.username} se desconectó. Cuenta regresiva de 30s iniciada.`, 'log-miss');
+            }
+        }
+        else if (mtype === 'OPPONENT_RECONNECTED') {
+            const alertEl = document.getElementById('reconnect-alert');
+            const textEl = document.getElementById('reconnect-text');
+            const badgeEl = document.getElementById('reconnect-timer-badge');
+            
+            alertEl.className = 'reconnect-alert connected';
+            textEl.textContent = `¡${msg.username} se ha reconectado! La partida continúa.`;
+            badgeEl.textContent = 'ONLINE';
+            
+            this.addCombatLog(`¡${msg.username} se ha reconectado a la partida!`, 'log-hit');
+            window.soundEngine.playSonar();
+            
+            setTimeout(() => {
+                alertEl.classList.add('hidden');
+            }, 3000);
+        }
+        else if (mtype === 'RECONNECT_SUCCESS') {
+            this.playerNum = msg.player_num;
+            this.currentRoomId = msg.room_id;
+            this.opponentName = msg.opponent_name || "Oponente";
+            this.isMyTurn = msg.your_turn;
+            this.turnCount = msg.turn_count || 1;
+            this.myShipsAlive = msg.my_hp !== undefined ? msg.my_hp : 5;
+            this.oppShipsAlive = msg.opp_hp !== undefined ? msg.opp_hp : 5;
+
+            // Restablecer grillas desde los datos sincronizados del servidor
+            this.myGrid = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
+            this.radarGrid = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
+
+            if (msg.my_grid_cells) {
+                msg.my_grid_cells.forEach(cell => {
+                    this.myGrid[cell.r][cell.c] = cell.val;
+                });
+            }
+
+            if (msg.radar_grid_cells) {
+                msg.radar_grid_cells.forEach(cell => {
+                    this.radarGrid[cell.r][cell.c] = cell.val;
+                });
+            }
+
+            document.getElementById('reconnect-alert').classList.add('hidden');
+
+            if (msg.status === 'PLACEMENT') {
+                this.initPlacementView();
+                this.showView('placement');
+            } else {
+                this.initBattleView();
+                this.showView('battle');
+                this.renderOwnBattleGrid();
+                this.renderRadarGrid();
+                this.updateTurnUI();
+                this.updateFleetHpUI();
+                this.addCombatLog('Te has reconectado exitosamente a la partida.', 'log-hit');
+            }
+            window.soundEngine.playSonar();
+        }
         else if (mtype === 'GAME_OVER') {
+            document.getElementById('reconnect-alert').classList.add('hidden');
             this.handleGameOver(msg);
         }
         else if (mtype === 'ERROR') {
             alert(msg.message);
         }
     }
+
 
     copyShareLink() {
         const input = document.getElementById('share-link-input');
