@@ -23,8 +23,9 @@ from pydantic import BaseModel
 import database
 from game_logic import Board, Ship, FLEET_SPEC, parse_coord, format_coord, BOARD_SIZE
 
-JWT_SECRET = "battlemish_secret_key_9823471092834710"
+JWT_SECRET = os.getenv("JWT_SECRET", "battlemish_secret_key_9823471092834710")
 JWT_ALGORITHM = "HS256"
+
 
 app = FastAPI(title="BattleMish Web Server", version="2.0.0")
 
