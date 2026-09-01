@@ -522,6 +522,15 @@ def validate_web_fleet(ships_data: List[dict]) -> Optional[Board]:
     return board
 
 
+# Endpoint explícito para favicon.ico
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    favicon_path = os.path.join(STATIC_DIR, "favicon.ico")
+    if os.path.exists(favicon_path):
+        return FileResponse(favicon_path, media_type="image/x-icon")
+    raise HTTPException(status_code=404, detail="Favicon no encontrado")
+
+
 # Montar archivos estáticos
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
 
